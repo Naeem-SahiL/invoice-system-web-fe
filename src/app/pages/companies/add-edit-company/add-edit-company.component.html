@@ -1,0 +1,40 @@
+<p-dialog
+  [(visible)]="visible"
+  modal
+  header="{{ form.get('id')?.value ? 'Edit Company' : 'Add Company' }}"
+  [style]="{ width: '500px' }"
+  (onHide)="onClose()"
+>
+  <form [formGroup]="form" class="flex flex-col gap-6 w-full">
+
+    <p-floatlabel variant="in">
+        <input pInputText id="in_label" formControlName="name" autocomplete="off" fluid />
+        <label for="in_label">Company Name *</label>
+        <p-message *ngIf="form.get('name')?.invalid && form.get('name')?.touched" severity="error" variant="simple" size="small">Company name is required</p-message>
+    </p-floatlabel>
+
+    <p-floatlabel variant="in">
+        <textarea pTextarea id="over_label" formControlName="address" rows="4" style="resize: none" class="h-full"
+            fluid></textarea>
+        <label for="in_label">Address *</label>
+        <p-message *ngIf="form.get('address')?.invalid && form.get('address')?.touched" severity="error" variant="simple" size="small">Address is required</p-message>
+    </p-floatlabel>
+
+    <p-floatlabel variant="in">
+        <input pInputText id="in_label" formControlName="phone" autocomplete="off" fluid />
+        <label for="in_label">Phone *</label>
+        <p-message *ngIf="form.get('phone')?.invalid && form.get('phone')?.touched" severity="error" variant="simple" size="small">Phone is required and must be a valid phone number</p-message>
+    </p-floatlabel>
+
+    <p-floatlabel variant="in">
+        <input pInputText id="in_label" formControlName="email" autocomplete="off" fluid />
+        <label for="in_label">Email *</label>
+        <p-message *ngIf="form.get('email')?.invalid && form.get('email')?.touched" severity="error" variant="simple" size="small">Email is required and must be a valid email address</p-message>
+    </p-floatlabel>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onClose()"></button>
+    <button pButton type="button" label="Save" [disabled]="form.invalid" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>

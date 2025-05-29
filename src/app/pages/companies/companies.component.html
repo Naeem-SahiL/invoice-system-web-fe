@@ -1,0 +1,100 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedCompanies()"
+            [disabled]="!selectedCompanies || !selectedCompanies.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <!-- <p-button label="Export" icon="pi pi-upload" class="mr-2" severity="secondary" (onClick)="exportCSV()" /> -->
+        <!-- reload icon -->
+        <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadData()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table #dt [value]="companies()" [rows]="10" [columns]="cols" [paginator]="true"
+    [loading]="loading"
+    [globalFilterFields]="['name', 'email', 'address', 'phone']" [tableStyle]="{ 'min-width': '75rem' }"
+    [(selection)]="selectedCompanies" [rowHover]="true" dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} companies" [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]">
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Manage Companies</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="name" style="min-width:16rem">
+                Name
+                <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="address" style="min-width:10rem">
+                Address
+                <p-sortIcon field="address" />
+            </th>
+
+            <th pSortableColumn="phone" style="min-width: 12rem">
+                Phone
+                <p-sortIcon field="phone" />
+            </th>
+            <th pSortableColumn="email" style="min-width: 12rem">
+                Email
+                <p-sortIcon field="email" />
+            </th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-company>
+
+        <tr >
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="company" />
+            </td>
+            <td style="min-width: 16rem">{{ company.name }}</td>
+
+            <td>{{ company.address }}</td>
+            <td>
+                {{ company.phone }}
+            </td>
+            <td>
+                {{ company.email }}
+            </td>
+
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                    (click)="editCompany(company)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                    (click)="deleteCompany(company)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Skeleton Rows -->
+<!-- <ng-template #skeletonRows>
+  <tr *ngFor="let i of [1, 2, 3]">
+    <td style="width: 3rem"><p-skeleton width="1.5rem" height="1.5rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="12rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="10rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="8rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="14rem" styleClass="mb-2" /></td>
+    <td class="flex justify-content-end">
+      <p-skeleton width="2rem" height="2rem" styleClass="mr-2" />
+      <p-skeleton width="2rem" height="2rem" />
+    </td>
+  </tr>
+</ng-template> -->
+
+<app-add-edit-company [visible]="companyDialog" [company]="company" (close)="hideDialog()"
+    (save)="saveCompany($event)"></app-add-edit-company>
+
+<p-confirmdialog [style]="{ width: '450px' }" />
+<p-toast/>
