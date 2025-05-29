@@ -1,0 +1,76 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNewInvoice()" />
+        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedInvoices()"
+            [disabled]="!selectedInvoices || !selectedInvoices.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadInvoices()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table #dt [value]="invoices()" [rows]="10" [paginator]="true"
+    [loading]="loading"
+    [globalFilterFields]="['invoice_number', 'company.name', 'invoice_date']"
+    [(selection)]="selectedInvoices" [rowHover]="true" dataKey="id"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]">
+
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Manage Invoices</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="invoice_number">Invoice # <p-sortIcon field="invoice_number" /></th>
+            <th pSortableColumn="company.name">Company <p-sortIcon field="company.name" /></th>
+            <th pSortableColumn="invoice_date">Date <p-sortIcon field="invoice_date" /></th>
+            <th pSortableColumn="gross_amount">Gross <p-sortIcon field="gross_amount" /></th>
+            <th pSortableColumn="vat_amount">VAT <p-sortIcon field="vat_amount" /></th>
+            <th pSortableColumn="total_amount">Total <p-sortIcon field="total_amount" /></th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-invoice>
+        <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="invoice" />
+            </td>
+            <td>{{ invoice.invoice_number }}</td>
+            <td>{{ invoice.company?.name }}</td>
+            <td>{{ invoice.invoice_date }}</td>
+            <td>{{ invoice.gross_amount }}</td>
+            <td>{{ invoice.vat_amount }}</td>
+            <td>{{ invoice.total_amount }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                    (click)="editInvoice(invoice)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                    (click)="deleteInvoice(invoice)" />
+
+                <p-button icon="pi pi-eye" class="ml-2" [rounded]="true" [outlined]="true"
+                    (click)="viewInvoice(invoice)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Dialog & Confirmation -->
+<!-- <app-add-edit-invoice [visible]="invoiceDialog" [invoice]="invoice"
+    (close)="hideDialog()" (save)="saveInvoice($event)"></app-add-edit-invoice> -->
+
+<p-confirmdialog [style]="{ width: '450px' }" />
+<p-toast />

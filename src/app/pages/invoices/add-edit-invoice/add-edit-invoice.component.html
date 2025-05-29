@@ -1,0 +1,152 @@
+<p-progressbar *ngIf="loading" mode="indeterminate" [style]="{ height: '6px' }" />
+<div class="card">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+        <h5 class="m-0">{{ isEditMode ? 'Edit Invoice' : 'Create Invoice' }}</h5>
+        <p-button label="Back to List" icon="pi pi-arrow-left" (onClick)="cancel()" severity="secondary" />
+    </div>
+
+    <!-- loop form errors-->
+    <div *ngIf="invoiceForm.errors" class="p-error mb-4">
+        <p *ngFor="let error of invoiceForm.errors | keyvalue">{{ error.value }}</p>
+    </div>
+
+
+    <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()">
+        <div class="flex flex-col gap-6 w-full">
+
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div class="flex gap-2">
+                    <p>Invoice #</p>
+                    <p>{{invoiceForm.get('invoice_number')?.value}}</p>
+                </div>
+
+                <div>
+                    <label for="invoice_date" class="mr-2">Invoice Date:</label>
+                    <p-datePicker id="invoice_date" formControlName="invoice_date" [showButtonBar]="true"
+                        dateFormat="dd-mm-yy" [showIcon]="true" class="w-full md:w-auto" />
+                    <small *ngIf="invoiceForm.get('invoice_date')?.invalid && invoiceForm.get('invoice_date')?.touched"
+                        class="p-error">Required</small>
+                </div>
+            </div>
+
+            <div>
+                <label for="company_id" class="mr-2">Company:</label>
+                <p-autocomplete formControlName="company" inputId="id" [dropdown]="true"
+                    [suggestions]="filteredComponies ?? []" (completeMethod)="filterCompany($event)" field="name"
+                    class="w-full" (onSelect)="companySelect($event)" />
+                <small *ngIf="invoiceForm.get('company')?.invalid && invoiceForm.get('company')?.touched"
+                    class="p-error">Required</small>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-2">
+                <p>Company Address: </p>
+                <p>{{invoiceForm.get('company')?.value?.address}}</p>
+            </div>
+
+            <!-- Remarks input -->
+            <div>
+                <label for="remarks" class="mr-2">Remarks:</label>
+                <textarea pTextarea id="over_label" formControlName="remarks" rows="2" style="resize: none" class="h-full"
+                    fluid></textarea>
+            </div>
+
+
+
+
+        </div>
+
+
+        <p-table [value]="invoiceItemsList" dataKey="id" [tableStyle]="{ 'min-width': '50rem' }"
+            [loading]="loading"
+        >
+
+            <ng-template #caption>
+                <div class="flex items-center justify-between">
+                    <span class="text-xl font-bold">Invoice Items</span>
+                    <p-button icon="pi pi-plus" rounded raised (onClick)="addInvoiceItem()" />
+                </div>
+            </ng-template>
+            <ng-template #header>
+                <tr>
+                    <th style="min-width: 4rem; width: 5%;">Sr.</th>
+                    <th style="min-width: 18rem; width: 30%;">Description</th>
+                    <th style="min-width: 10rem; width: 15%;">Service Name</th>
+                    <th style="min-width: 8rem; width: 15%;">QTY</th>
+                    <th style="min-width: 8rem; width: 15%;">Rate</th>
+                    <th style="min-width: 8rem; width: 15%;">Amount</th>
+                    <th style="min-width: 8rem; width: 15%;">Vat Amount</th>
+                    <th style="min-width: 12rem; width: 20%;">Total Amount</th>
+                    <th style="min-width: 8rem; "></th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item let-index>
+                <tr>
+                    <td>
+                        {{ item.sr_no_group }}
+                    </td>
+                    <td>
+                        {{ item.description }}
+                    </td>
+                    <td>
+                        {{ item.service.name }}
+                    </td>
+                    <td>
+                        {{ item.quantity }}
+                    </td>
+                    <td>
+                        {{ item.rate }}
+                    </td>
+                    <td>
+                        {{ item.amount }}
+                    </td>
+                    <td>
+                        {{ item.vat_amount }}
+                    </td>
+                    <td>
+                        {{ item.total_amount }}
+                    </td>
+                    <td>
+                        <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                            (onClick)="editInvoiceItem(item)" />
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                            (onClick)="deleteInvoiceItem(item)" />
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+
+        <div class="flex flex-col gap-4 mt-10 w-full md:w-1/2 ml-auto">
+            <div class="flex flex-row justify-between items-center">
+                <span class="font-semibold">Gross Amount:</span>
+                <span>{{ invoiceForm.get('gross_amount')?.value | number:'1.2-2' }}</span>
+            </div>
+            <div class="flex flex-row justify-between items-center">
+                <span class="font-semibold">VAT Amount:</span>
+                <span>{{ invoiceForm.get('vat_amount')?.value | number:'1.2-2' }}</span>
+            </div>
+            <div class="flex flex-row justify-between items-center">
+                <span class="font-semibold">Total Amount:</span>
+                <span>{{ invoiceForm.get('total_amount')?.value | number:'1.2-2' }}</span>
+            </div>
+        </div>
+
+
+    </form>
+
+    <div class="flex flex-col md:flex-row justify-end gap-2 mt-4">
+        <p-button label="Cancel" icon="pi pi-times" severity="secondary" (onClick)="cancel()" />
+        <p-button label="Save" icon="pi pi-check" type="submit" [disabled]="invoiceForm.invalid" (onClick)="onSubmit()" />
+    </div>
+
+</div>
+
+
+
+
+<p-toast />
+
+<app-add-edit-invoice-item [visible]="invoiceItemDialogueVisible" [invoiceItem]="selectedInvoiceItem"
+    (close)="hideDialog()" (save)="saveInvoiceItem($event)"></app-add-edit-invoice-item>
+
+    <p-confirmdialog [style]="{ width: '450px' }" />

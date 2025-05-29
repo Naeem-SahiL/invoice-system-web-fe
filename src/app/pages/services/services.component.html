@@ -1,0 +1,108 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button label="Delete" icon="pi pi-trash" severity="secondary" outlined
+            (onClick)="deleteSelectedServices()" [disabled]="!selectedServices || !selectedServices.length" />
+    </ng-template>
+
+    <ng-template #end>
+       <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadServices()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table #dt [value]="services()" [rows]="10" [columns]="cols" [paginator]="true" [loading]="loading"
+    [globalFilterFields]="['name', 'description', 'rate', 'service_type_id']"
+    [tableStyle]="{ 'min-width': '75rem' }" [(selection)]="selectedServices" [rowHover]="true" dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} services" [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]">
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Manage Services</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="name" style="min-width:16rem">
+                Name
+                <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="description" style="min-width:18rem">
+                Description
+                <p-sortIcon field="description" />
+            </th>
+            <th pSortableColumn="rate" style="min-width:10rem">
+                Rate
+                <p-sortIcon field="rate" />
+            </th>
+            <th pSortableColumn="vat_percentage" style="min-width:10rem">
+                Vat Percentage
+                <p-sortIcon field="vat_percentage" />
+            </th>
+            <th pSortableColumn="service_type.visible_value" style="min-width:10rem">
+                Service Type
+                <p-sortIcon field="service_type.visible_value" />
+            </th>
+            <th pSortableColumn="active" style="min-width:8rem">
+                Active
+                <p-sortIcon field="active" />
+            </th>
+            <th style="min-width:12rem"></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-service>
+        <tr >
+            <td>
+                <p-tableCheckbox [value]="service" />
+            </td>
+            <td>{{ service.name }}</td>
+            <td>{{ service.description }}</td>
+            <td>{{ service.rate  }}</td>
+            <td>{{ service.vat_percentage ?? 0 }}%</td>
+            <td>{{ service.service_type?.visible_value }}</td>
+            <td>
+                <p-tag [value]="service.active == 1 ? 'Yes' : 'No'" [severity]="service.active == 1 ? 'success' : 'danger'" />
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                    (click)="editService(service)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                    (click)="deleteService(service)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Skeleton Rows -->
+<!-- <ng-template #skeletonRows>
+  <tr *ngFor="let i of [1, 2, 3]">
+    <td style="width: 3rem">
+      <p-skeleton width="1.5rem" height="1.5rem" styleClass="mb-2" />
+    </td>
+    <td><p-skeleton width="12rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="10rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="8rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="14rem" styleClass="mb-2" /></td>
+    <td><p-skeleton width="4rem" styleClass="mb-2" /></td>
+    <td class="flex justify-content-end min-w-[12rem]">
+      <p-skeleton width="2rem" height="2rem" styleClass="mr-2" />
+      <p-skeleton width="2rem" height="2rem" />
+    </td>
+  </tr>
+</ng-template> -->
+
+
+<app-add-edit-service [visible]="serviceDialog" [service]="service" (close)="hideDialog()"
+    (save)="saveService($event)"></app-add-edit-service>
+
+<p-confirmdialog [style]="{ width: '450px' }" />
+
+<p-toast/>
