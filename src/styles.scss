@@ -3,3 +3,88 @@
 @use './assets/layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './assets/demo/demo.scss';
+
+
+
+//body.print-mode * {
+//    visibility: hidden !important;
+//}
+//
+//body.print-mode #print-footer,
+//body.print-mode #print-section:not(.print-invisible),
+//body.print-mode #print-section *:not(.print-invisible) {
+//    visibility: visible !important;
+//}
+
+//body.print-mode #print-section {
+//    position: absolute;
+//    left: 0;
+//    top: 0;
+//    width: 794px; /* A4 size width in px */
+//    padding: 20px;
+//    background: white;
+//}
+
+
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    * {
+        background: transparent !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    @page {
+        size: Letter;
+        margin: 5px;
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #print-section, #print-section *:not(.print-invisible) {
+        visibility: visible !important;
+    }
+
+    #print-footer, #print-footer * {
+        visibility: visible !important;
+    }
+
+    #print-section, #print-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        color: red;
+        background: white;
+        z-index: 9999;
+    }
+
+    //#print-spacer {
+    //    height: 100px; /* Adjust as needed */
+    //    page-break-before: auto;
+    //    page-break-after: auto;
+    //}
+
+    #print-section {
+        top: 0;
+    }
+
+}

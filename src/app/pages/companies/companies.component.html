@@ -36,6 +36,12 @@
                 Name
                 <p-sortIcon field="name" />
             </th>
+
+            <th pSortableColumn="vat_no" style="min-width:10rem">
+                VAT No
+                <p-sortIcon field="vat_no" />
+            </th>
+
             <th pSortableColumn="address" style="min-width:10rem">
                 Address
                 <p-sortIcon field="address" />
@@ -59,6 +65,7 @@
                 <p-tableCheckbox [value]="company" />
             </td>
             <td style="min-width: 16rem">{{ company.name }}</td>
+            <td style="min-width: 10rem">{{ company.vat_no || '---' }}</td>
 
             <td>{{ company.address }}</td>
             <td>

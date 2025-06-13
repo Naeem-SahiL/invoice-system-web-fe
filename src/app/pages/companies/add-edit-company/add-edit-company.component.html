@@ -27,6 +27,12 @@
     </p-floatlabel>
 
     <p-floatlabel variant="in">
+        <input pInputText id="in_label" formControlName="vat_no" autocomplete="off" fluid />
+        <label for="in_label">VAT No *</label>
+        <p-message *ngIf="form.get('vat_no')?.invalid && form.get('vat_no')?.touched" severity="error" variant="simple" size="small">vat_no is required</p-message>
+    </p-floatlabel>
+
+      <p-floatlabel variant="in">
         <input pInputText id="in_label" formControlName="email" autocomplete="off" fluid />
         <label for="in_label">Email *</label>
         <p-message *ngIf="form.get('email')?.invalid && form.get('email')?.touched" severity="error" variant="simple" size="small">Email is required and must be a valid email address</p-message>

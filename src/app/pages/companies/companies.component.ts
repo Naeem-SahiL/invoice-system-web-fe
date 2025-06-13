@@ -192,6 +192,7 @@ export class CompaniesComponent {
                 header: 'Confirm',
                 icon: 'pi pi-exclamation-triangle',
                 accept: () => {
+                    this.loading = true;
                     this.companiesService.deleteCompany(company.id!).subscribe({
                         next: (data) => {
                             this.company = {};
@@ -211,6 +212,7 @@ export class CompaniesComponent {
                                 life: 3000
                             });
                             this.company = {};
+                            this.loading = false;
                         }
                     });
                 }
@@ -233,7 +235,7 @@ export class CompaniesComponent {
             console.log('Company saved:', company);
             this.submitted = true;
 
-
+            this.loading = true;
             if (company.name?.trim()) {
                 if (company.id) {
                     this.companiesService.updateCompany(company).subscribe({
@@ -254,6 +256,7 @@ export class CompaniesComponent {
                                 detail: 'Failed to update company',
                                 life: 3000
                             });
+                            this.loading = false;
                         }
                     });
                 } else {
@@ -274,6 +277,7 @@ export class CompaniesComponent {
                                 detail: 'Failed to create company',
                                 life: 3000
                             });
+                            this.loading = false;
                         }
                     });
                 }

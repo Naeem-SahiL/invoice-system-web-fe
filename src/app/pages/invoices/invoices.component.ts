@@ -52,6 +52,13 @@ export class InvoicesComponent {
     loading = true;
     error = false;
 
+    state = {
+        first: 0,
+        rows: 10,
+        totalRecords: 0,
+        globalFilter: ''
+    }
+
     invoices = signal<Invoice[]>([]);
     selectedInvoices: Invoice[] = [];
     invoice!: Invoice;
@@ -66,14 +73,25 @@ export class InvoicesComponent {
     ) {}
 
     ngOnInit() {
-        this.loadInvoices();
+        this.loadInvoices(this.state);
     }
 
-    loadInvoices() {
+    loadInvoices(event) {
         this.loading = true;
-        this.invoiceService.getInvoiceData().subscribe({
-            next: (data) => {
-                this.invoices.set(data);
+
+
+        const page = event.first / event.rows + 1;
+        const perPage = event.rows;
+
+        let params = {
+            page,
+            per_page: perPage
+        }
+        this.invoiceService.getInvoiceData(params).subscribe({
+            next: (res) => {
+                this.state.totalRecords = res.total;
+
+                this.invoices.set(res?.data);
                 this.loading = false;
             },
             error: () => {
@@ -116,7 +134,7 @@ export class InvoicesComponent {
                         detail: 'Invoice updated successfully',
                         life: 3000
                     });
-                    this.loadInvoices();
+                    this.loadInvoices(this.state);
                 },
                 error: () => {
                     this.messageService.add({
@@ -136,7 +154,7 @@ export class InvoicesComponent {
                         detail: 'Invoice created successfully',
                         life: 3000
                     });
-                    this.loadInvoices();
+                    this.loadInvoices(this.state);
                 },
                 error: () => {
                     this.messageService.add({
@@ -167,7 +185,7 @@ export class InvoicesComponent {
                             detail: 'Invoice deleted successfully',
                             life: 3000
                         });
-                        this.loadInvoices();
+                        this.loadInvoices(this.state);
                     },
                     error: () => {
                         this.messageService.add({
@@ -198,7 +216,7 @@ export class InvoicesComponent {
                             life: 3000
                         });
                         this.selectedInvoices = [];
-                        this.loadInvoices();
+                        this.loadInvoices(this.state);
                     },
                     error: () => {
                         this.messageService.add({

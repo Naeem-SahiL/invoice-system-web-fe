@@ -27,6 +27,7 @@ export interface Company {
     address?: string;
     phone?: string;
     email?: string;
+    vat_no?: string;
 }
 
 @Injectable()

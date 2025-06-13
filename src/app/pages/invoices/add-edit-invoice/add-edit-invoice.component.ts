@@ -1,6 +1,6 @@
-import { Invoice, InvoiceItem } from './../../service/invoice.service';
+import { Invoice, InvoiceItem } from '../../service/invoice.service';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -11,64 +11,56 @@ import { Textarea, TextareaModule } from 'primeng/textarea';
 import { CompaniesService, Company } from '../../service/companies.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InvoiceService } from '../../service/invoice.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Toast } from 'primeng/toast';
 import { DatePicker } from 'primeng/datepicker';
-import { InputNumber } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
-import { AddEditInvoiceItemComponent } from './add-edit-invoice-item/add-edit-invoice-item.component';
 import { ServiceItem } from '../../service/services.service';
 import { ProgressBar } from 'primeng/progressbar';
-import { Tag } from 'primeng/tag';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { GlobalMessageService } from '../../service/global-message.service';
+import { InvoiceItemComponent } from './invoice-item/invoice-item.component';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import {GlobalMessageService} from "../../service/global-message.service";
+import {ConfirmDialog} from "primeng/confirmdialog";
 
 @Component({
     selector: 'app-add-edit-invoice',
     imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    DialogModule,
-    InputTextModule,
-    Textarea,
-    ButtonModule,
-    InputTextModule,
-    TextareaModule,
-    FloatLabelModule,
-    AutoComplete,
-    Toast,
-    DatePicker,
-    MessageModule,
-    TableModule,
-    AddEditInvoiceItemComponent,
-    ProgressBar,
-    ConfirmDialog
-],
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        DialogModule,
+        InputTextModule,
+        Textarea,
+        ButtonModule,
+        InputTextModule,
+        TextareaModule,
+        FloatLabelModule,
+        AutoComplete,
+        Toast,
+        DatePicker,
+        MessageModule,
+        TableModule,
+        ProgressBar,
+        ConfirmPopupModule,
+        InvoiceItemComponent,
+        ConfirmDialog
+    ],
     templateUrl: './add-edit-invoice.component.html',
     styleUrl: './add-edit-invoice.component.scss',
-    providers: [
-        MessageService,
-        ConfirmationService,
-        CompaniesService,
-        InvoiceService,
-        DatePipe
-    ]
+    providers: [CompaniesService, ConfirmationService, InvoiceService, DatePipe]
 })
-export class AddEditInvoiceComponent {
+export class AddEditInvoiceComponent implements OnInit {
+    groupForm: FormGroup;
     invoiceForm!: FormGroup;
     isEditMode = false;
     invoiceId!: string;
     loading = false;
     companies: Company[] = [];
     selectedCompany: Company | null = null;
-    invoiceData : Invoice | null = null;
+    invoiceData: Invoice | null = null;
 
-    selectedInvoiceItem: InvoiceItem | null = null;
-    invoiceItemDialogueVisible = false;
-    service!:ServiceItem;
-
+    service!: ServiceItem;
 
     constructor(
         private fb: FormBuilder,
@@ -76,11 +68,15 @@ export class AddEditInvoiceComponent {
         private router: Router,
         private invoiceService: InvoiceService,
         private companyService: CompaniesService,
-        private messageService: MessageService,
         private globalMsgService: GlobalMessageService,
         private confirmationService: ConfirmationService,
         private datePipe: DatePipe
-    ) {}
+    ) {
+        this.groupForm = this.fb.group({
+            customerInvoiceNo: ['', Validators.required],
+            declarationNo: ['', Validators.required]
+        });
+    }
 
     filteredComponies: Company[] | undefined;
 
@@ -106,10 +102,9 @@ export class AddEditInvoiceComponent {
     ngOnInit(): void {
         this.invoiceId = this.route.snapshot.paramMap.get('id') ?? '';
         this.isEditMode = !!this.invoiceId;
-        console.log('isEditMode:', this.isEditMode, 'invoiceId:', this.invoiceId);
 
         this.invoiceForm = this.fb.group({
-            id: ['' ],
+            id: [''],
             invoice_number: ['', Validators.required],
             company_id: [null, Validators.required],
             invoice_date: ['', Validators.required],
@@ -117,15 +112,18 @@ export class AddEditInvoiceComponent {
             vat_amount: [0, Validators.required],
             remarks: [''],
             company: [null],
-            total_amount: [{ value: 0, disabled: true }]
+            total_amount: [0, Validators.required],
+            groups: this.fb.array([])
         });
+
+        if (!this.isEditMode) this.addGroupToForm();
 
         this.companyService.getCompaniesData().subscribe({
             next: (companies) => {
                 this.companies = companies;
             },
             error: () => {
-                this.messageService.add({
+                this.globalMsgService.showMessage({
                     severity: 'error',
                     summary: 'Error',
                     detail: 'Failed to load companies'
@@ -145,6 +143,40 @@ export class AddEditInvoiceComponent {
         this.calculateTotal();
     }
 
+    addGroupToForm(groupData?: any) {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        if (groupsArray) {
+            groupsArray.push(
+                this.fb.group({
+                    id: [groupData?.id || ''],
+                    blNo: [groupData?.blNo || ''],
+                    customerInvoiceNo: [groupData?.customerInvoiceNo || ''],
+                    title: [groupData?.title || '', Validators.required],
+                    declarationNo: [groupData?.declarationNo || '', Validators.required],
+                    items: this.fb.array(groupData?.items || [])
+                })
+            );
+        }
+    }
+
+    moveGroupUp(index) {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        if (groupsArray && index > 0) {
+            const group = groupsArray.at(index);
+            groupsArray.removeAt(index);
+            groupsArray.insert(index - 1, group);
+        }
+    }
+
+    moveGroupDown(index) {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        if (groupsArray && index < groupsArray.length - 1) {
+            const group = groupsArray.at(index);
+            groupsArray.removeAt(index);
+            groupsArray.insert(index + 1, group);
+        }
+    }
+
     loadInvoice(id: string) {
         this.loading = true;
         this.invoiceService.getInvoiceById(id).subscribe({
@@ -154,7 +186,7 @@ export class AddEditInvoiceComponent {
                 this.loading = false;
             },
             error: () => {
-                this.messageService.add({
+                this.globalMsgService.showMessage({
                     severity: 'error',
                     summary: 'Error',
                     detail: 'Failed to load invoice'
@@ -177,95 +209,157 @@ export class AddEditInvoiceComponent {
                 remarks: this.invoiceData.remarks
             });
 
+            this.invoiceData.groups.map((group) => {
+                this.addGroupToForm({
+                    id: group.id,
+                    blNo: group.blNo,
+                    customerInvoiceNo: group.customerInvoiceNo,
+                    title: group.title,
+                    declarationNo: group.declarationNo,
+                    items: group.items.map((item) => ({
+                        ...item,
+                        temp_id: item.temp_id || crypto.randomUUID() // Ensure temp_id is set
+                    }))
+                });
+            });
+
             // Set selected company
-            const company = this.companies.find(c => String(c.id) === String(this.invoiceData?.company_id));
+            const company = this.companies.find((c) => String(c.id) === String(this.invoiceData?.company_id));
             if (company) {
                 this.invoiceForm.controls['company'].setValue(company);
             }
-
-            this.invoiceItemsList.push(...(this.invoiceData.items || []));
-            this.invoiceItemsList.forEach(item => {
-                item.temp_id = item.temp_id || crypto.randomUUID(); // Ensure temp_id is set
-            });
+            //
+            // this.invoiceItemsList.push(...(this.invoiceData.items || []));
+            // this.invoiceItemsList.forEach((item) => {
+            //     item.temp_id = item.temp_id || crypto.randomUUID(); // Ensure temp_id is set
+            // });
 
             console.log('Loaded invoice data:', this.invoiceData);
             console.log('Form values:', this.invoiceForm.value);
         }
     }
 
-    calculateTotal() {
-        let gross = 0;
-        let vat = 0;
-        console.log('Calculating totals for invoice items:', this.invoiceItemsList);
-        this.invoiceItemsList.forEach(item => {
-            gross += parseFloat(String(item.amount)) || 0;
-            vat += parseFloat(String(item.vat_amount)) || 0;
-        })
+    private roundTo(value: number, digits: number = 3): number {
+        return +value.toFixed(digits);
+    }
 
-        this.invoiceForm.get('gross_amount')?.setValue(gross);
-        this.invoiceForm.get('vat_amount')?.setValue(vat);
-        this.invoiceForm.get('total_amount')?.setValue(gross + vat);
-        console.log('Calculated totals:', {
-            gross_amount: gross,
-            vat_amount: vat,
-            total_amount: gross + vat
+    calculateTotal() {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        let invoiceItemsList: InvoiceItem[] = [];
+
+        if (groupsArray?.length > 0) {
+            groupsArray.controls.forEach((group: any) => {
+                const items = group.get('items')?.value;
+                if (Array.isArray(items)) {
+                    invoiceItemsList.push(...items);
+                }
+            });
+        }
+
+        let gross = 0.0;
+        let vat = 0.0;
+
+        invoiceItemsList.forEach((item) => {
+            const amount = this.roundTo(+item.amount || 0);
+            const vatAmount = this.roundTo(+item.vat_amount || 0);
+
+            gross += amount;
+            vat += vatAmount;
         });
+
+        this.invoiceForm.get('gross_amount')?.setValue(this.roundTo(gross));
+        this.invoiceForm.get('vat_amount')?.setValue(this.roundTo(vat));
+        this.invoiceForm.get('total_amount')?.setValue(this.roundTo(gross + vat));
     }
 
     onSubmit() {
-        if (this.invoiceForm.invalid) return;
-        if(this.invoiceItemsList.length === 0) {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Please add at least one invoice item' });
+        if (this.invoiceForm.invalid) {
+            this.invoiceForm.markAllAsTouched();
+            this.globalMsgService.showMessage({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Please fill all required fields'
+            });
             return;
         }
 
-        let formValue = this.invoiceForm.getRawValue();
+        this.validateGroups();
+        let formValue = this.invoiceForm.value;
 
         const payload: Invoice = {
-            id: formValue.id || null,
-            invoice_number: formValue.invoice_number.toString(),
-            company_id: formValue.company_id ,
+            id: formValue.id,
+            invoice_number: formValue.invoice_number,
+            company_id: formValue.company_id,
             invoice_date: formValue.invoice_date,
             gross_amount: formValue.gross_amount,
             vat_amount: formValue.vat_amount,
             total_amount: formValue.total_amount,
             remarks: formValue.remarks || null,
-            items: this.invoiceItemsList.map(item => ({
-                id: item.id,
-                description: item.description,
-                quantity: item.quantity,
-                rate: item.rate,
-                amount: item.amount,
-                vat_amount: item.vat_amount,
-                total_amount: item.total_amount,
-                service_id: item.service_id,
-                sr_no_group: item.sr_no_group,
-            } as InvoiceItem)),
+            groups: formValue.groups.map((group, index) => ({
+                srNo: (index + 1).toString(),
+                ...group,
+                items: group.items.map((item) => ({
+                    ...item
+                }))
+            }))
         };
 
-        console.log('Submitting invoice:', payload);
+        console.log(payload);
+
+        this.loading = true;
 
         if (this.isEditMode) {
             this.invoiceService.updateInvoice(payload).subscribe({
                 next: () => {
                     this.globalMsgService.showMessage({ severity: 'success', summary: 'Success', detail: 'Invoice updated' });
+                    this.loading = false;
                     this.router.navigate(['/pages/invoices']);
                 },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update invoice' });
+                error: (err) => {
+                    console.log(err);
+                    this.loading = false;
+                    this.globalMsgService.showMessage({ severity: 'error', summary: 'Error', detail: err.error.message });
                 }
             });
         } else {
             this.invoiceService.createInvoice(payload).subscribe({
                 next: () => {
+                    this.loading = false;
                     this.globalMsgService.showMessage({ severity: 'success', summary: 'Success', detail: 'Invoice created' });
                     this.router.navigate(['/pages/invoices']);
                 },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to create invoice' });
+                error: (err) => {
+                    console.log(err);
+                    this.loading = false;
+                    this.globalMsgService.showMessage({ severity: 'error', summary: 'Error', detail: err.error.message });
                 }
             });
         }
+    }
+
+    validateGroups() {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        if (groupsArray.length === 0) {
+            this.globalMsgService.showMessage({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Please add at least one group'
+            });
+            return false;
+        }
+
+        for (let i = 0; i < groupsArray.length; i++) {
+            const group = groupsArray.at(i);
+            if (!group.valid || group.get('items').value.length === 0) {
+                this.globalMsgService.showMessage({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: `Please fill all fields in group ${i + 1}`
+                });
+                return false;
+            }
+        }
+        return true;
     }
 
     cancel() {
@@ -279,62 +373,39 @@ export class AddEditInvoiceComponent {
         }
     }
 
-    invoiceItemsList: InvoiceItem[] = [];
-
-    addInvoiceItem() {
-        // this.invoiceItemsList.push({
-        //     id: this.invoiceItemsList.length + 1
-        // })
-
-        this.invoiceItemDialogueVisible = true;
-        this.selectedInvoiceItem = null;
-    }
-
-    hideDialog() {
-        this.invoiceItemDialogueVisible = false;
-        this.selectedInvoiceItem = null;
-    }
-
-    saveInvoiceItem(item:InvoiceItem) {
-        let itemValue = {...item}
-
-        if(item.temp_id !== null && item.temp_id !== undefined && item.temp_id !== ''){
-            const existingIndex = this.invoiceItemsList.findIndex(i => i.temp_id === item.temp_id);
-            if (existingIndex > -1) {
-                this.invoiceItemsList[existingIndex] = item; // Update existing item
+    addGroup() {
+        const groupsArray = this.invoiceForm.get('groups') as any;
+        // if groups array last item has valid fields then add new group
+        if (groupsArray.length > 0) {
+            const lastGroup = groupsArray.at(groupsArray.length - 1);
+            if (lastGroup.valid && lastGroup.get('items')?.value?.length > 0) {
+                this.addGroupToForm();
+            } else {
+                lastGroup.markAllAsTouched();
+                this.globalMsgService.showMessage({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Please fill the last group before adding a new one'
+                });
+                return;
             }
-        }else{
-            item.temp_id = crypto.randomUUID();
-            this.invoiceItemsList.push(item); // Add new item
+        } else {
+            this.addGroupToForm();
         }
-
-        // this.invoiceItemsList.push(item);
-        this.invoiceItemDialogueVisible = false;
-        this.calculateTotal();
-        this.selectedInvoiceItem = null;
     }
 
-    editInvoiceItem(item: InvoiceItem) {
-        this.selectedInvoiceItem = item;
-        this.invoiceItemDialogueVisible = true;
-        // this.service = item.service || { service_type: {} as any };
-    }
-
-    deleteInvoiceItem(item: InvoiceItem) {
+    deleteGroup(groupIndex: number) {
         this.confirmationService.confirm({
-            message: `Are you sure you want to delete this invoice item?`,
             header: 'Confirm',
+            message: 'Are you sure you want to delete this group?',
             icon: 'pi pi-exclamation-triangle',
+
             accept: () => {
-                this.removeInvoiceItem(item);
-            }
+                (this.invoiceForm.get('groups') as any).removeAt(groupIndex);
+
+            },
+            reject: () => {}
         });
-
-    }
-
-    removeInvoiceItem(item: InvoiceItem) {
-        this.invoiceItemsList = this.invoiceItemsList.filter(i => i.temp_id !== item.temp_id);
-        this.calculateTotal();
     }
 }
 

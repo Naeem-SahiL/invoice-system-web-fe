@@ -81,22 +81,28 @@ export class AddEditInvoiceItemComponent implements OnInit, AfterViewInit {
         });
     }
 
+    private roundTo(value: number, digits: number = 3): number {
+        return +value.toFixed(digits);
+    }
+
     private calculateAmountFromQuantityAndRate() {
-        const quantity = this.form.get('quantity')?.value || 0;
-        const rate = this.form.get('rate')?.value || 0;
-        const amount = quantity * rate;
+        const quantity = +this.form.get('quantity')?.value || 0;
+        const rate = +this.form.get('rate')?.value || 0;
+        const amount = this.roundTo(quantity * rate);
 
         this.form.patchValue({ amount }, { emitEvent: false });
     }
 
     private calculateVatAndTotal() {
-        const amount = this.form.get('amount')?.value || 0;
-        const vatPercentage = this.form.get('service')?.value?.vat_percentage || 0;
-        const vat_amount = (amount * vatPercentage) / 100;
-        const total_amount = amount + vat_amount;
+        const amount = +this.form.get('amount')?.value || 0;
+        const vatPercentage = +this.form.get('service')?.value?.vat_percentage || 0;
+
+        const vat_amount = this.roundTo((amount * vatPercentage) / 100);
+        const total_amount = this.roundTo(amount + vat_amount);
 
         this.form.patchValue({ vat_amount, total_amount }, { emitEvent: false });
     }
+
 
     buildForm() {
         this.form = this.fb.group({
@@ -104,7 +110,7 @@ export class AddEditInvoiceItemComponent implements OnInit, AfterViewInit {
             temp_id: [null],
             service_id: [null],
             service: [null],
-            sr_no_group: [null, Validators.required],
+            // sr_no_group: [null, Validators.required],
             description: ['', Validators.required],
             rate: [0, [Validators.required, Validators.min(0)]],
             quantity: [0, [Validators.required, Validators.min(0)]],

@@ -17,8 +17,18 @@ export interface Invoice {
     amount_in_words?: string | null;
     created_at?: string;
     updated_at?: string;
-    items?: InvoiceItem[];
+    groups?: InvoiceGroup[];
     company?: Company
+}
+
+export interface InvoiceGroup {
+    id: number;
+    title: string;
+    customerInvoiceNo: string;
+    blNo: string;
+    declarationNo: string;
+    items: InvoiceItem[];
+    srNo: string;
 }
 
 
@@ -51,8 +61,8 @@ export class InvoiceService {
     private apiUrl = StaticAppConfig.get('apiBaseUrl') + '/invoices';
     constructor(private http: HttpClient) {}
 
-    getInvoiceData(): Observable<Invoice[]> {
-        return this.http.get<Invoice[]>(this.apiUrl);
+    getInvoiceData(params): Observable<any> {
+        return this.http.get<Invoice[]>(this.apiUrl, { params });
     }
 
     getInvoiceById(id: string):Observable<Invoice> {
