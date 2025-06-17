@@ -1,0 +1,222 @@
+<h2 class="text-2xl font-semibold mb-4">Company Payments</h2>
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <form [formGroup]="formGroup">
+            <div class="flex flex-row gap-3 justify-start">
+                <div class="w-auto">
+                    <p-auto-complete
+                        [required]="true"
+                        inputId="id"
+                        [dropdown]="true"
+                        [suggestions]="filteredCompanies ?? []"
+                        (completeMethod)="filterCompany($event)"
+                        field="name"
+                        class="w-full"
+                        (onSelect)="onCompanySelect($event)"
+                        placeholder="Select Company"
+                    ></p-auto-complete>
+                </div>
+                <div class="w-auto">
+                    <p-date-picker
+                        formControlName="fromDate"
+                        inputId="fromDate"
+                        placeholder="From Date"
+                        dateFormat="yy-mm-dd"
+                        icon="pi pi-calendar"
+                        showIcon
+                        class="w-full"
+                    ></p-date-picker>
+
+                </div>
+                <div class="w-auto">
+                    <p-date-picker
+                        formControlName="toDate"
+                        inputId="toDate"
+                        placeholder="To Date"
+                        dateFormat="yy-mm-dd"
+                        icon="pi pi-calendar"
+                        showIcon
+                        class="w-full"
+                    ></p-date-picker>
+                </div>
+
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Load" icon="pi pi-refresh" iconPos="right"
+                  (onClick)="loadPayments()"
+                  [disabled]="formGroup.invalid || loading"
+        />
+    </ng-template>
+</p-toolbar>
+
+<p-button label="Add Payment" icon="pi pi-plus" (onClick)="openAddPaymentDialog()"></p-button>
+
+<p-table [value]="selectedInvoices" selectionMode="multiple" [(selection)]="selectedInvoicesSelection">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Invoice</th>
+            <th>Outstanding</th>
+            <th>Amount Received</th>
+            <th>Actions</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-inv>
+        <tr>
+            <td>{{ inv.invoice_number }}</td>
+            <td>{{ inv.outstanding_balance }}</td>
+            <td>
+                <p-inputNumber [(ngModel)]="inv.amount_received" mode="decimal" [minFractionDigits]="2" />
+            </td>
+            <td>
+                <p-button icon="pi pi-trash" (onClick)="removeSelectedInvoice(inv)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-table #dt
+         [lazy]="true"
+         [value]="payments"
+         [loading]="loading"
+         [first]="state.first"
+         [showCurrentPageReport]="true"
+         [rowHover]="true" dataKey="id"
+         (onLazyLoad)="onLazyLoad($event)"
+         [rowsPerPageOptions]="[10, 20, 30]"
+         [totalRecords]="state.totalRecords"
+         [columns]="cols"
+         [paginator]="true"
+         [rows]="state.rows"
+         [tableStyle]="{ 'min-width': '75rem' }"
+         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} companies"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Payments</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilterDebounced(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 3rem"></th>
+            <th>Invoice Number</th>
+            <th>Payment Date</th>
+            <th>Amount Received</th>
+            <th></th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-payment let-expanded="expanded">
+        <tr>
+            <td>
+                <p-button type="button" pRipple [pRowToggler]="payment" [text]="true" [rounded]="true" [plain]="true" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+            </td>
+            <td>{{ payment.invoice_number }}</td>
+            <td>{{ payment.payment_date }}</td>
+            <td>
+                <ng-container *ngIf="editingRowId === payment.id; else displayAmount">
+                    <p-inputNumber [(ngModel)]="payment.amount_received"
+                                   mode="decimal"
+                                   inputStyleClass="w-full"
+                                   [minFractionDigits]="3"
+                                   [step]="0.010"
+
+                    >
+                    </p-inputNumber>
+                </ng-container>
+                <ng-template #displayAmount>
+                  {{ payment.amount_received ? (payment.amount_received | number:'1.3-3') : '0.000' }}
+                </ng-template>
+            </td>
+            <td class="flex gap-2">
+                <ng-container *ngIf="editingRowId === payment.id; else actionButtons">
+                    <p-button icon="pi pi-check"
+                              severity="success"
+                              [rounded]="true"
+                              [outlined]="true"
+                              (onClick)="savePayment(payment)"
+                              [loading]="editingRowId === payment.id && saving" />
+                    <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [outlined]="true"
+                              (onClick)="cancelEdit()" />
+                </ng-container>
+                <ng-template #actionButtons>
+                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                              (onClick)="editRow(payment)" />
+                    <p-button icon="pi pi-trash"
+                              severity="danger"
+                              [rounded]="true"
+                              [outlined]="true"
+                              (onClick)="deletePayment(payment)"
+                              [loading]="deletingRowId === payment.id && deleting" />
+                </ng-template>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="expandedrow" let-payment>
+        <tr>
+            <td colspan="5">
+                <p-card>
+                    <div class="flex flex-col md:flex-row gap-5 justify-between">
+                        <div class="text-gray-700 space-y-1 w-fit">
+                            <div *ngIf="payment.payment_method" class="flex border-b border-gray-200 py-1">
+                                <span class="font-bold w-40 text-gray-600">Payment Method:</span>
+                                <span class="pl-2">{{ payment.payment_method }}</span>
+                            </div>
+                            <div *ngIf="payment.reference_no" class="flex border-b border-gray-200 py-1 ">
+                                <span class="font-bold w-40 text-gray-600">Reference No:</span>
+                                <span class="pl-2">{{ payment.reference_no }}</span>
+                            </div>
+                            <div *ngIf="payment.remarks" class="flex py-1 w-fit">
+                                <span class="font-bold w-40 text-gray-600">Remarks:</span>
+                                <span class="pl-2">{{ payment.remarks }}</span>
+                            </div>
+                        </div>
+                        <div class="">
+                            <strong>Files:</strong><br>
+                            <div class="flex gap-1 flex-wrap">
+                               <a *ngFor="let file of payment.files"
+                                  href="{{ file.url }}"
+                                  target="_blank"
+                                  class="p-button-text p-button-sm flex items-center gap-1"
+                                  pTooltip="{{ file.url.split('/').pop() }}"
+                                  tooltipPosition="top">
+                                   <i class="pi pi-file"></i>
+                                   {{ file.url.split('/').pop() }}
+                               </a>
+                            </div>
+                        </div>
+                    </div>
+                </p-card>
+            </td>
+        </tr>
+    </ng-template>
+
+
+</p-table>
+
+<!--Add Payment Dialogue-->
+<p-dialog header="Add Payment"
+          [(visible)]="showAddPaymentDialog"
+          [modal]="true"
+          [style]="{ width: '70vw' }"
+          [closable]="false">
+
+    <app-add-payment
+        [companyId]="formGroup.value.selectedCompanyId"
+        (paymentsSelected)="onPaymentsSelected($event)"
+        (closeDialog)="showAddPaymentDialog = false">
+    </app-add-payment>
+
+</p-dialog>
+
+<p-toast />

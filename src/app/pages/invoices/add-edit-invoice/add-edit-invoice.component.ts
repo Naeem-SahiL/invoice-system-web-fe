@@ -159,7 +159,7 @@ export class AddEditInvoiceComponent implements OnInit {
         }
     }
 
-    moveGroupUp(index) {
+    moveGroupUp(index:any) {
         const groupsArray = this.invoiceForm.get('groups') as any;
         if (groupsArray && index > 0) {
             const group = groupsArray.at(index);

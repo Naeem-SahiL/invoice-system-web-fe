@@ -1,4 +1,5 @@
-<p-progressbar *ngIf="loading" mode="indeterminate" [style]="{ height: '6px' }" />
+<p-progress-bar *ngIf="loading" mode="indeterminate" [style]="{ height: '6px' }" />
+
 <div class="card">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
         <h5 class="m-0">{{ isEditMode ? 'Edit Invoice' : 'Create Invoice' }}</h5>
@@ -19,9 +20,10 @@
 
                 <div class="flex items-center">
                     <label for="company_id" class="mr-2">Company:</label>
-                    <p-autocomplete [required]="true" formControlName="company" inputId="id" [dropdown]="true"
-                                    [suggestions]="filteredComponies ?? []" (completeMethod)="filterCompany($event)" field="name"
-                                    class="w-full" (onSelect)="companySelect($event)"></p-autocomplete>
+                    <p-auto-complete [required]="true" formControlName="company" inputId="id" [dropdown]="true"
+                                    [suggestions]="filteredComponies ?? []" (completeMethod)="filterCompany($event)"
+                                     optionLabel="name"
+                                    class="w-full" (onSelect)="companySelect($event)"></p-auto-complete>
 
                 </div>
 
@@ -75,20 +77,9 @@
                 <p-button label="Add Group" icon="pi pi-plus" class="" (onClick)="addGroup()" [disabled]="loading"/>
             </div>
 
-
-
-
         </div>
 
-
-
-
-
-
     </form>
-
-
-
 
     <div class="flex flex-col gap-4 mt-10 w-full md:w-1/2 ml-auto">
         <div class="flex flex-row justify-between items-center">
@@ -117,9 +108,7 @@
 
 </div>
 
-
-
-
 <p-toast />
+
 <p-confirm-dialog/>
 

@@ -38,6 +38,13 @@ export class AppMenu {
                     { label: 'Inovices List', icon: 'pi pi-fw pi-home', routerLink: ['/pages/invoices'] },
                 ]
             },
+            {
+                label: 'Payments',
+                items: [
+                    { label: 'Company Payments', icon: 'pi pi-credit-card', routerLink: ['/pages/company-payments'] },
+                    { label: 'Add Payment', icon: 'pi pi-fw pi-plus', routerLink: ['/pages/company-payments/create'] }
+                ]
+            },
             // {
             //     label: 'UI Components',
             //     items: [

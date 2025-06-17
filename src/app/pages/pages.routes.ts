@@ -7,6 +7,8 @@ import { ServicesComponent } from './services/services.component';
 import { InvoicesComponent } from './invoices/invoices.component';
 import { AddEditInvoiceComponent } from './invoices/add-edit-invoice/add-edit-invoice.component';
 import { InvoiceDetailsComponent } from './invoices/invoice-details/invoice-details.component';
+import { CompanyPaymentsComponent } from './company-payments/company-payments.component';
+import { AddPaymentComponent } from './company-payments/add-payment/add-payment.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -20,6 +22,13 @@ export default [
             { path: 'create', component: AddEditInvoiceComponent },
             { path: 'edit/:id', component: AddEditInvoiceComponent },
             { path: 'view/:id', component: InvoiceDetailsComponent }
+        ]
+    },
+    {
+        path: 'company-payments',
+        children: [
+            { path: '', component: CompanyPaymentsComponent },
+            { path: 'create', component: AddPaymentComponent },
         ]
     },
     { path: 'empty', component: Empty },

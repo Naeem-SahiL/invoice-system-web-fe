@@ -14,6 +14,7 @@ import { Select, SelectModule } from 'primeng/select';
 
 import { ServiceItem, ServicesService } from '../../../service/services.service';
 import { InvoiceItem } from '../../../service/invoice.service';
+import { LookupsService } from '../../../service/lookups.service';
 
 @Component({
     selector: 'app-add-edit-invoice-item',
@@ -40,7 +41,8 @@ export class AddEditInvoiceItemComponent implements OnInit, AfterViewInit {
 
     constructor(
         private fb: FormBuilder,
-        private serviceApi: ServicesService
+        private serviceApi: ServicesService,
+        private lookupsService: LookupsService
     ) {}
 
     ngOnInit() {
@@ -121,7 +123,7 @@ export class AddEditInvoiceItemComponent implements OnInit, AfterViewInit {
     }
 
     loadServiceTypes() {
-        this.serviceApi.getServiceTypeLookup().subscribe((data) => {
+        this.lookupsService.getLookupBytype("service_type").subscribe((data) => {
             this.serviceTypes = data.map((type) => ({
                 id: type.id,
                 value: type.visible_value
