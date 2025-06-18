@@ -53,7 +53,36 @@
     </ng-template>
 </p-toolbar>
 
-<p-button label="Add Payment" icon="pi pi-plus" (onClick)="openAddPaymentDialog()"></p-button>
+<div class="flex-col justify-end pb-2">
+    <p-button label="Add Payment" icon="pi pi-plus" (onClick)="openAddPaymentDialog()"></p-button>
+
+    <div class="mt-4">
+        <button
+            type="button"
+            (click)="showAddPaymentDialog = !showAddPaymentDialog"
+            class="flex items-center gap-2 px-4 py-2 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200 border border-blue-300 text-blue-700 font-medium shadow-sm"
+            style="box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+        >
+            <i class="pi" [ngClass]="showAddPaymentDialog ? 'pi-minus' : 'pi-plus'"></i>
+            <span class="ml-2 whitespace-nowrap">Add payment</span>
+        </button>
+
+        <div *ngIf="showAddPaymentDialog" class="mt-2" [@expandCollapse]>
+            <div class="bg-white rounded shadow p-4 transition-all duration-300">
+                <p class="m-0">
+                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum
+                    deleniti atque
+                    corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
+                    sunt in
+                    culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum
+                    facilis est et
+                    expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit
+                    quo minus.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <p-table [value]="selectedInvoices" selectionMode="multiple" [(selection)]="selectedInvoicesSelection">
     <ng-template pTemplate="header">
@@ -204,19 +233,21 @@
 
 </p-table>
 
-<!--Add Payment Dialogue-->
-<p-dialog header="Add Payment"
-          [(visible)]="showAddPaymentDialog"
-          [modal]="true"
-          [style]="{ width: '70vw' }"
-          [closable]="false">
+<!--&lt;!&ndash;Add Payment Dialogue&ndash;&gt;-->
+<!--<p-dialog header="Add Payment"-->
+<!--          [(visible)]="showAddPaymentDialog"-->
+<!--          [modal]="true"-->
+<!--          [style]="{ width: '70vw' }"-->
+<!--          [closable]="false"-->
+<!--          (onHide)="onAddPaymentDialogClose()">-->
 
-    <app-add-payment
-        [companyId]="formGroup.value.selectedCompanyId"
-        (paymentsSelected)="onPaymentsSelected($event)"
-        (closeDialog)="showAddPaymentDialog = false">
-    </app-add-payment>
-
-</p-dialog>
+<!--    <ng-container *ngIf="showAddPaymentDialog">-->
+<!--        <app-add-payment-->
+<!--            [companyId]="formGroup.value.selectedCompanyId"-->
+<!--            (paymentsSelected)="onPaymentsSelected($event)"-->
+<!--            (closeDialog)="closeAddPaymentDialog()">-->
+<!--        </app-add-payment>-->
+<!--    </ng-container>-->
+<!--</p-dialog>-->
 
 <p-toast />

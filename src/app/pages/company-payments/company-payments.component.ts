@@ -12,7 +12,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
-import { DecimalPipe, formatDate, NgForOf, NgIf } from '@angular/common';
+import { DecimalPipe, formatDate, NgClass, NgForOf, NgIf } from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
@@ -22,6 +22,7 @@ import { Toast } from 'primeng/toast';
 import {DatePicker} from "primeng/datepicker";
 import {Dialog} from "primeng/dialog";
 import {AddPaymentComponent} from "./add-payment/add-payment.component";
+import { AccordionModule } from 'primeng/accordion';
 
 @Component({
     selector: 'app-company-payments',
@@ -49,11 +50,22 @@ import {AddPaymentComponent} from "./add-payment/add-payment.component";
         Tooltip,
         DatePicker,
         Dialog,
-        AddPaymentComponent
+        AddPaymentComponent,
+        AccordionModule,
+        NgClass
     ],
     templateUrl: './company-payments.component.html',
     styleUrl: './company-payments.component.scss',
-    providers: [CompaniesService]
+    providers: [CompaniesService],
+    animations: [
+        trigger('expandCollapse', [
+            state('void', style({ height: '0', opacity: 0, overflow: 'hidden' })),
+            state('*', style({ height: '*', opacity: 1, overflow: 'hidden' })),
+            transition('void <=> *', [
+                animate('300ms cubic-bezier(0.4,0.0,0.2,1)')
+            ])
+        )
+
 })
 export class CompanyPaymentsComponent implements OnInit {
     @ViewChild('dt') dt!: Table;
@@ -93,6 +105,7 @@ export class CompanyPaymentsComponent implements OnInit {
 
     searchSubject = new Subject<{ table: Table; event: Event }>();
     formGroup: any;
+    activeAccordianIndex = undefined;
     selectedInvoices: any;
     showAddPaymentDialog = false;
     selectedInvoicesForPayment: any[] = [];
@@ -242,22 +255,32 @@ export class CompanyPaymentsComponent implements OnInit {
             this.showError('Please select a company first');
             return;
         }
-        this.showAddPaymentDialog = true;
+        // this.showAddPaymentDialog = true;
+        this.activeAccordianIndex = '0';
     }
 
     removeSelectedInvoice(inv: any) {
         this.selectedInvoices = this.selectedInvoices.filter((i) => i.invoice_id !== inv.invoice_id);
     }
 
-
-
     onPaymentsSelected(event: any) {
-        this.selectedInvoicesForPayment = event.invoices.map(inv => ({
+        this.selectedInvoicesForPayment = event.invoices.map((inv) => ({
             ...inv,
             amount_received: inv.outstanding_balance // default amount received
         }));
         this.remarksFromDialog = event.remarks;
         this.filesFromDialog = event.files;
+    }
+
+    closeAddPaymentDialog() {
+        this.showAddPaymentDialog = false;
+    }
+
+    onAddPaymentDialogClose() {
+        // This ensures complete cleanup
+        setTimeout(() => {
+            this.showAddPaymentDialog = false;
+        });
     }
 
     savePayments() {
@@ -277,7 +300,7 @@ export class CompanyPaymentsComponent implements OnInit {
             formData.append(`payments[${idx}][amount_received]`, inv.amount_received);
         });
 
-        (this.filesFromDialog || []).forEach(file => {
+        (this.filesFromDialog || []).forEach((file) => {
             formData.append('files[]', file, file.name);
         });
 
@@ -302,5 +325,4 @@ export class CompanyPaymentsComponent implements OnInit {
             detail
         });
     }
-
 }
