@@ -19,6 +19,7 @@
                  [loading]="loading"
                  [tableStyle]="{ 'min-width': '75rem' }"
                  [responsiveLayout]="'scroll'"
+
                  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
         >
 
@@ -30,6 +31,15 @@
                         <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search..." />
                     </p-iconfield>
                 </div>
+            </ng-template>
+
+            // empty caption
+            <ng-template pTemplate="emptymessage" let-c>
+                <tr>
+                    <td colspan="4" class="p-4 !text-center">
+                        No outstanding invoices found for the selected company.
+                    </td>
+                </tr>
             </ng-template>
 
             <ng-template pTemplate="header">
@@ -56,33 +66,10 @@
 
         </p-table>
 
-        <!-- Remarks -->
-        <p-floatlabel>
-            <textarea pTextarea id="over_label" [(ngModel)]="remarks" rows="2" style="resize: none" class="h-full w-full"></textarea>
-            <label for="over_label">Remarks</label>
-        </p-floatlabel>
-
-        <!-- File Upload -->
-        <p-fileupload name="demo[]" url="https://www.primefaces.org/cdn/api/upload.php"
-                      [multiple]="true"
-                      accept="image/*,application/pdf"
-                      mode="advanced"
-                      [customUpload]="true"
-                      [showUploadButton]="false"
-                      cancelLabel="Clear"
-                      (onSelect)="onFilesSelected($event)"
-                      (onRemove)="onFileRemove($event)"
-                      (onClear)="onClearFiles($event)"
-        >
-            <ng-template #empty>
-                <div>Drag and drop files to here to upload.</div>
-            </ng-template>
-        </p-fileupload>
-
         <!-- Actions -->
         <div class="p-field mt-4 text-right">
             <p-button label="Done" icon="pi pi-check" (onClick)="done()" [disabled]="loading"></p-button>
-            <p-button label="Cancel" icon="pi pi-times" class="p-button-secondary ml-2" (onClick)="closeDialog.emit()"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" class="p-button-secondary ml-2" (onClick)="onClose()"></p-button>
         </div>
 
     </div>

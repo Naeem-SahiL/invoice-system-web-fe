@@ -31,6 +31,11 @@ export class PaymentsService {
             params
         });
     }
+    getLegderInvoices(params:any): Observable<any> {
+        return this.http.get(this.baseUrl + '/invoices/ledger', {
+            params
+        });
+    }
 
     submitMultiplePayments(formData: FormData) {
         return this.http.post(this.baseUrl + '/invoice-payments/multiple', formData);

@@ -34,17 +34,39 @@ export class AppMenu {
             },
             {
                 label: 'Invoices',
-                items: [
-                    { label: 'Inovices List', icon: 'pi pi-fw pi-home', routerLink: ['/pages/invoices'] },
-                ]
+                items: [{ label: 'Inovices List', icon: 'pi pi-fw pi-home', routerLink: ['/pages/invoices'] }]
             },
             {
                 label: 'Payments',
                 items: [
                     { label: 'Company Payments', icon: 'pi pi-credit-card', routerLink: ['/pages/company-payments'] },
-                    { label: 'Add Payment', icon: 'pi pi-fw pi-plus', routerLink: ['/pages/company-payments/create'] }
+                    // { label: 'Add Payment', icon: 'pi pi-fw pi-plus', routerLink: ['/pages/company-payments/create'] }
                 ]
             },
+            {
+                label: 'Reports',
+                items: [
+                    {
+                        label: 'Outstanding Invoices',
+                        icon: 'pi pi-fw pi-file',
+                        routerLink: ['/pages/outstanding-invoices']
+                    },
+                    { label: 'VAT Report', icon: 'pi pi-fw pi-file-excel', routerLink: ['/pages/company-payments/create'] }
+                ]
+            },
+            {
+                label: 'Ledger',
+                items: [
+                    { label: 'Ledger Invoices', icon: 'pi pi-fw pi-file', routerLink: ['/pages/ledger-invoices'] }
+                ]
+            },
+            // {
+            //     label: 'Settings',
+            //     items: [
+            //         { label: 'User Management', icon: 'pi pi-fw pi-users', routerLink: ['/settings/user-management'] },
+            //         { label: 'System Settings', icon: 'pi pi-fw pi-cog', routerLink: ['/settings/system-settings'] }
+            //     ]
+            // },
             // {
             //     label: 'UI Components',
             //     items: [

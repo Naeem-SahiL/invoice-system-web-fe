@@ -1,6 +1,7 @@
 <h2 class="text-2xl font-semibold mb-4">Company Payments</h2>
 
 <p-toolbar styleClass="mb-6">
+<!--       Fields Input-->
     <ng-template #start>
         <form [formGroup]="formGroup">
             <div class="flex flex-row gap-3 justify-start">
@@ -44,7 +45,7 @@
             </div>
         </form>
     </ng-template>
-
+<!--Load button-->
     <ng-template #end>
         <p-button label="Load" icon="pi pi-refresh" iconPos="right"
                   (onClick)="loadPayments()"
@@ -53,60 +54,145 @@
     </ng-template>
 </p-toolbar>
 
-<div class="flex-col justify-end pb-2">
-    <p-button label="Add Payment" icon="pi pi-plus" (onClick)="openAddPaymentDialog()"></p-button>
+<!--Add payment card-->
+<div class="flex-col pb-2">
 
-    <div class="mt-4">
-        <button
-            type="button"
-            (click)="showAddPaymentDialog = !showAddPaymentDialog"
-            class="flex items-center gap-2 px-4 py-2 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200 border border-blue-300 text-blue-700 font-medium shadow-sm"
-            style="box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
-        >
-            <i class="pi" [ngClass]="showAddPaymentDialog ? 'pi-minus' : 'pi-plus'"></i>
-            <span class="ml-2 whitespace-nowrap">Add payment</span>
-        </button>
+    <div class="w-full flex justify-end pb-2">
+    <p-button label="Add Payment" [icon]="'pi pi-plus'" (onClick)="openAddPaymentCard()"></p-button>
+    </div>
 
-        <div *ngIf="showAddPaymentDialog" class="mt-2" [@expandCollapse]>
-            <div class="bg-white rounded shadow p-4 transition-all duration-300">
-                <p class="m-0">
-                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum
-                    deleniti atque
-                    corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
-                    sunt in
-                    culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum
-                    facilis est et
-                    expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit
-                    quo minus.
-                </p>
+    <p-card *ngIf="showAddPaymentCard" class="rounded-sm shadow-none" [styleClass]="'shadow-none'"  @accordionToggle>
+        <ng-template #title>
+            <div class="flex items-center justify-between">
+                <span>Add Payment</span>
+                <button type="button" class="p-button p-button-text p-button-sm" (click)="onCardClose()"
+                        aria-label="Close">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+        </ng-template>
+
+        <!-- Payment date-->
+        <div class="flex gap-4 mt-1 justify-between">
+            <div class="min-w-[200px]">
+                <p-iftalabel>
+                    <p-select
+                        [required]="true"
+                        inputId="id"
+                        optionLabel="visible_value"
+                        class="w-full"
+                        placeholder="Select Payment Method"
+                        [options]="paymentMethods"
+                        [(ngModel)]="selectedPaymentMethod"
+                    ></p-select>
+                    <label for="paymentDate">Payment Method</label>
+                </p-iftalabel>
+            </div>
+
+            <div class="w-auto">
+                <p-iftalabel>
+                    <p-date-picker
+                        name="paymentDate"
+                        [(ngModel)]="paymentDate"
+                        placeholder="Payment Date"
+                        dateFormat="yy-mm-dd"
+                        [showTime]="true"
+                        icon="pi pi-calendar"
+                        showIcon
+                        class="w-full"
+                    ></p-date-picker>
+                    <label for="paymentDate">Payment Date</label>
+                </p-iftalabel>
+
             </div>
         </div>
-    </div>
+
+        <!-- Select Invoices -->
+        <div class="py-4">
+
+            <div class="my-3">
+                <p-table [value]="selectedInvoicesForPayment" selectionMode="multiple" >
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Invoice Date</th>
+                            <th>Outstanding</th>
+                            <th>Amount Received</th>
+                            <th>Actions</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-inv>
+                        <tr>
+                            <td>{{ inv.invoice_number }}</td>
+                            <td>{{ inv.due_date | date: 'yyyy-MM-dd' }}</td>
+                            <td>{{ inv.outstanding_balance }}</td>
+                            <td>
+                                <p-inputNumber [(ngModel)]="inv.amount_received" mode="decimal"
+                                               [minFractionDigits]="3"/>
+                            </td>
+                            <td class="flex-1 flex justify-start">
+                                <p-button severity="danger" icon="pi pi-trash" (onClick)="removeSelectedInvoice(inv)"/>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                </p-table>
+
+                <div class="flex-1 flex justify-start mt-3">
+                    <p-button icon="pi pi-plus"
+                              label="Add Invoice"
+                              [link]="true"
+                              (onClick)="showAddInvoiceDialog = true"></p-button>
+                </div>
+
+            </div>
+
+
+            <!-- Reference No -->
+            <p-floatlabel class="my-6">
+                <input pInputText id="reference_no" [(ngModel)]="referenceNumber"/>
+                <label for="reference_no">Reference No</label>
+            </p-floatlabel>
+
+            <!-- Remarks -->
+            <p-floatlabel>
+                <textarea pTextarea id="over_label" [(ngModel)]="remarks" rows="2" style="resize: none" class="h-full w-full"></textarea>
+                <label for="over_label">Remarks</label>
+            </p-floatlabel>
+
+
+            <!-- File Upload -->
+            <div class="my-6">
+                <label>Files</label>
+            </div>
+            <p-fileupload name="demo"
+                          [multiple]="true"
+                          accept="image/*,application/pdf"
+                          mode="advanced"
+
+                          [customUpload]="true"
+                          [showUploadButton]="false"
+                          cancelLabel="Clear"
+                          (onSelect)="onFilesSelected($event)"
+                          (onRemove)="onFileRemove($event)"
+                          (onClear)="onClearFiles($event)"
+            >
+                <ng-template #empty>
+                    <div>Drag and drop files to here to upload.</div>
+                </ng-template>
+            </p-fileupload>
+
+        </div>
+
+        <ng-template #footer>
+            <div class="flex gap-4 mt-1 justify-end">
+                <p-button icon="pi pi-save" label="Save" [loading]="savingPayment" (onClick)="savePayments()"></p-button>
+            </div>
+        </ng-template>
+    </p-card>
 </div>
 
-<p-table [value]="selectedInvoices" selectionMode="multiple" [(selection)]="selectedInvoicesSelection">
-    <ng-template pTemplate="header">
-        <tr>
-            <th>Invoice</th>
-            <th>Outstanding</th>
-            <th>Amount Received</th>
-            <th>Actions</th>
-        </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-inv>
-        <tr>
-            <td>{{ inv.invoice_number }}</td>
-            <td>{{ inv.outstanding_balance }}</td>
-            <td>
-                <p-inputNumber [(ngModel)]="inv.amount_received" mode="decimal" [minFractionDigits]="2" />
-            </td>
-            <td>
-                <p-button icon="pi pi-trash" (onClick)="removeSelectedInvoice(inv)" />
-            </td>
-        </tr>
-    </ng-template>
-</p-table>
-
+<!--Payment Records Table-->
 <p-table #dt
          [lazy]="true"
          [value]="payments"
@@ -121,9 +207,9 @@
          [paginator]="true"
          [rows]="state.rows"
          [tableStyle]="{ 'min-width': '75rem' }"
-         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} companies"
+         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} payments"
 >
-    <ng-template #caption>
+    <ng-template pTemplate="caption">
         <div class="flex items-center justify-between">
             <h5 class="m-0">Payments</h5>
             <p-iconfield>
@@ -132,7 +218,6 @@
             </p-iconfield>
         </div>
     </ng-template>
-
 
     <ng-template pTemplate="header">
         <tr>
@@ -175,7 +260,7 @@
                               (onClick)="savePayment(payment)"
                               [loading]="editingRowId === payment.id && saving" />
                     <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [outlined]="true"
-                              (onClick)="cancelEdit()" />
+                              (onClick)="cancelEdit(payment)" />
                 </ng-container>
                 <ng-template #actionButtons>
                     <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
@@ -196,21 +281,21 @@
             <td colspan="5">
                 <p-card>
                     <div class="flex flex-col md:flex-row gap-5 justify-between">
-                        <div class="text-gray-700 space-y-1 w-fit">
-                            <div *ngIf="payment.payment_method" class="flex border-b border-gray-200 py-1">
-                                <span class="font-bold w-40 text-gray-600">Payment Method:</span>
+                        <div class=" space-y-1 w-fit">
+                            <div *ngIf="payment.payment_method" class="flex border-b  py-1">
+                                <span class="font-bold w-40 ">Payment Method:</span>
                                 <span class="pl-2">{{ payment.payment_method }}</span>
                             </div>
-                            <div *ngIf="payment.reference_no" class="flex border-b border-gray-200 py-1 ">
-                                <span class="font-bold w-40 text-gray-600">Reference No:</span>
+                            <div *ngIf="payment.reference_no" class="flex border-b  py-1 ">
+                                <span class="font-bold w-40 ">Reference No:</span>
                                 <span class="pl-2">{{ payment.reference_no }}</span>
                             </div>
                             <div *ngIf="payment.remarks" class="flex py-1 w-fit">
-                                <span class="font-bold w-40 text-gray-600">Remarks:</span>
+                                <span class="font-bold w-40 ">Remarks:</span>
                                 <span class="pl-2">{{ payment.remarks }}</span>
                             </div>
                         </div>
-                        <div class="">
+                        <div *ngIf="payment.files?.length>0" class="">
                             <strong>Files:</strong><br>
                             <div class="flex gap-1 flex-wrap">
                                <a *ngFor="let file of payment.files"
@@ -230,24 +315,33 @@
         </tr>
     </ng-template>
 
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="5" class="p-4 !text-center">
+                {{formGroup.controls.selectedCompanyId.value ? 'No payments found for the selected company. Try reload' : 'Please select company to show payments.'}}
+            </td>
+        </tr>
+    </ng-template>
 
 </p-table>
 
-<!--&lt;!&ndash;Add Payment Dialogue&ndash;&gt;-->
-<!--<p-dialog header="Add Payment"-->
-<!--          [(visible)]="showAddPaymentDialog"-->
-<!--          [modal]="true"-->
-<!--          [style]="{ width: '70vw' }"-->
-<!--          [closable]="false"-->
-<!--          (onHide)="onAddPaymentDialogClose()">-->
+<!--Add Payment Dialogue-->
+<p-dialog header="Add Payment"
+          [(visible)]="showAddInvoiceDialog"
+          [modal]="true"
+          [style]="{ width: '70vw' }"
+          [closable]="false"
+          (onHide)="onAddPaymentDialogClose()">
 
-<!--    <ng-container *ngIf="showAddPaymentDialog">-->
-<!--        <app-add-payment-->
-<!--            [companyId]="formGroup.value.selectedCompanyId"-->
-<!--            (paymentsSelected)="onPaymentsSelected($event)"-->
-<!--            (closeDialog)="closeAddPaymentDialog()">-->
-<!--        </app-add-payment>-->
-<!--    </ng-container>-->
-<!--</p-dialog>-->
+    <ng-container *ngIf="showAddInvoiceDialog">
+        <app-add-payment
+            [companyId]="formGroup.value.selectedCompanyId"
+            [prevSelectedInvoices]="selectedInvoicesForPayment"
+            (invoicesSelected)="onInvoiceSelected($event)"
+            (closeDialog)="closeAddInvoiceDialog()">
+        </app-add-payment>
+    </ng-container>
+</p-dialog>
 
 <p-toast />
+<p-confirm-dialog [style]="{ width: '450px' }" />

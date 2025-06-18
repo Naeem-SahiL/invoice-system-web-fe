@@ -23,7 +23,8 @@ import { FloatLabel } from 'primeng/floatlabel';
 })
 export class AddPaymentComponent implements OnInit {
     @Input() companyId!: number;
-    @Output() paymentsSelected = new EventEmitter<any>();
+    @Input() prevSelectedInvoices!: any[];
+    @Output() invoicesSelected = new EventEmitter<any>();
     @Output() closeDialog = new EventEmitter<void>();
 
     state = {
@@ -35,8 +36,7 @@ export class AddPaymentComponent implements OnInit {
 
     outstandingInvoices: any[] = [];
     selectedInvoices: any[] = [];
-    remarks: string = '';
-    uploadedFiles: File[] = [];
+
     loading: boolean = false;
     private lastTableEvent: any = this.state;
 
@@ -78,6 +78,7 @@ export class AddPaymentComponent implements OnInit {
             next: (res) => {
                 this.outstandingInvoices = res.data;
                 this.state.totalRecords = res.total;
+                this.processPrevSelectedInvoices();
                 this.loading = false;
             },
             error: () => {
@@ -87,22 +88,14 @@ export class AddPaymentComponent implements OnInit {
         });
     }
 
-    onFilesSelected(event: any) {
-        if (event.files) {
-            this.uploadedFiles = [...event.files];
-        }
-    }
-
     done() {
         if (!this.selectedInvoices.length) {
             this.showError('Please select at least one invoice');
             return;
         }
 
-        this.paymentsSelected.emit({
-            invoices: this.selectedInvoices,
-            remarks: this.remarks,
-            files: this.uploadedFiles
+        this.invoicesSelected.emit({
+            invoices: this.selectedInvoices
         });
         this.closeDialog.emit();
     }
@@ -115,23 +108,31 @@ export class AddPaymentComponent implements OnInit {
         });
     }
 
-    onFileRemove($event: FileRemoveEvent) {
-        const removedFile = $event.file;
-        this.uploadedFiles = this.uploadedFiles.filter(file => file.name !== removedFile.name);
-        this.globalMsgService.showMessage({
-            severity: 'info',
-            summary: 'File Removed',
-            detail: `Removed file: ${removedFile.name}`
-        });
-
+    onClose() {
+        this.selectedInvoices = [];
+        this.closeDialog.emit();
     }
 
-    onClearFiles($event: Event) {
-        this.uploadedFiles = [];
-        this.globalMsgService.showMessage({
-            severity: 'info',
-            summary: 'Files Cleared',
-            detail: 'All uploaded files have been cleared'
-        });
+    private processPrevSelectedInvoices() {
+        if (this.prevSelectedInvoices && this.prevSelectedInvoices.length) {
+            let invoicesFullyPaid = [];
+            this.outstandingInvoices.forEach(invoice => {
+                // subtract the amount already paid
+                const prevInvoice = this.prevSelectedInvoices.find(prev => prev.id === invoice.id);
+                if (prevInvoice) {
+                    invoice.outstanding_balance = parseFloat(invoice.outstanding_balance) - parseFloat(prevInvoice.amount_received);
+                    if (invoice.outstanding_balance == 0.000){
+                        invoicesFullyPaid.push(invoice);
+                    }
+                }
+            });
+
+            if(invoicesFullyPaid.length > 0){
+                this.outstandingInvoices = this.outstandingInvoices.filter(invoice => invoicesFullyPaid.indexOf(invoice) === -1);
+            }
+        } else {
+            this.selectedInvoices = [];
+        }
+
     }
 }

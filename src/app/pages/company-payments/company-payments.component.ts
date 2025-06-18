@@ -12,7 +12,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
-import { DecimalPipe, formatDate, NgClass, NgForOf, NgIf } from '@angular/common';
+import {DatePipe, DecimalPipe, formatDate, NgClass, NgForOf, NgIf} from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
@@ -20,9 +20,17 @@ import { Ripple } from 'primeng/ripple';
 import { InputNumber } from 'primeng/inputnumber';
 import { Toast } from 'primeng/toast';
 import {DatePicker} from "primeng/datepicker";
-import {Dialog} from "primeng/dialog";
-import {AddPaymentComponent} from "./add-payment/add-payment.component";
 import { AccordionModule } from 'primeng/accordion';
+import {animate, style, transition, trigger} from '@angular/animations';
+import {FloatLabel} from "primeng/floatlabel";
+import {Textarea} from "primeng/textarea";
+import {FileRemoveEvent, FileUpload} from "primeng/fileupload";
+import { Dialog } from 'primeng/dialog';
+import { AddPaymentComponent } from './add-payment/add-payment.component';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { IftaLabel } from 'primeng/iftalabel';
+import { Select } from 'primeng/select';
 
 @Component({
     selector: 'app-company-payments',
@@ -49,23 +57,64 @@ import { AccordionModule } from 'primeng/accordion';
         Toolbar,
         Tooltip,
         DatePicker,
+        AccordionModule,
+        FloatLabel,
+        Textarea,
+        FileUpload,
+        DatePipe,
         Dialog,
         AddPaymentComponent,
-        AccordionModule,
-        NgClass
+        ConfirmDialog,
+        IftaLabel,
+        Select
     ],
     templateUrl: './company-payments.component.html',
     styleUrl: './company-payments.component.scss',
-    providers: [CompaniesService],
+    providers: [CompaniesService, ConfirmationService],
     animations: [
-        trigger('expandCollapse', [
-            state('void', style({ height: '0', opacity: 0, overflow: 'hidden' })),
-            state('*', style({ height: '*', opacity: 1, overflow: 'hidden' })),
-            transition('void <=> *', [
-                animate('300ms cubic-bezier(0.4,0.0,0.2,1)')
+        trigger('cardAnimation', [
+            transition(':enter', [style({ opacity: 0, transform: 'translateY(-10px)' }), animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))]),
+            transition(':leave', [animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))])
+        ]),
+        trigger('accordionToggle', [
+            transition(':enter', [
+                style({
+                    height: '0',
+                    opacity: 0,
+                    paddingTop: '0',
+                    paddingBottom: '0',
+                    marginTop: '0',
+                    marginBottom: '0',
+                    overflow: 'hidden'
+                }),
+                animate(
+                    '300ms ease',
+                    style({
+                        height: '*',
+                        opacity: 1,
+                        paddingTop: '*',
+                        paddingBottom: '*',
+                        marginTop: '*',
+                        marginBottom: '*'
+                    })
+                )
+            ]),
+            transition(':leave', [
+                style({ overflow: 'hidden' }),
+                animate(
+                    '200ms ease',
+                    style({
+                        height: '10px',
+                        opacity: 0,
+                        paddingTop: '0',
+                        paddingBottom: '0',
+                        marginTop: '0',
+                        marginBottom: '0'
+                    })
+                )
             ])
-        )
-
+        ])
+    ]
 })
 export class CompanyPaymentsComponent implements OnInit {
     @ViewChild('dt') dt!: Table;
@@ -92,10 +141,10 @@ export class CompanyPaymentsComponent implements OnInit {
 
     companyOptions = [];
     selectedCompanyId: number;
+    selectedPaymentMethod: any;
     filteredCompanies: Company[] | undefined;
     payments = [];
     paymentMethods = [];
-    remarks = '';
 
     loading = false;
     saving = false;
@@ -104,19 +153,24 @@ export class CompanyPaymentsComponent implements OnInit {
     deletingRowId: any;
 
     searchSubject = new Subject<{ table: Table; event: Event }>();
-    formGroup: any;
-    activeAccordianIndex = undefined;
-    selectedInvoices: any;
-    showAddPaymentDialog = false;
-    selectedInvoicesForPayment: any[] = [];
-    remarksFromDialog: string = '';
-    filesFromDialog: File[] = [];
 
-    selectedInvoicesSelection = [];
+    formGroup: any;
+    selectedInvoices: any[] = [];
+    showAddPaymentCard = false;
+    showAddInvoiceDialog = false;
+    selectedInvoicesForPayment: any[] = [];
+    remarks: string = '';
+    uploadedFiles: File[] = [];
+    paymentDate: any = new Date();
+    referenceNumber: string = '';
+
+    savingPayment = false;
+    private editingRowOriginal: any;
 
     constructor(
         private companyService: CompaniesService,
         private globalMsgService: GlobalMessageService,
+        private confirmationService: ConfirmationService,
         private lookupService: LookupsService,
         private paymentService: PaymentsService,
         private formBuilder: FormBuilder
@@ -166,7 +220,13 @@ export class CompanyPaymentsComponent implements OnInit {
 
     loadPaymentMethods() {
         this.lookupService.getLookupBytype('payment_method').subscribe({
-            next: (methods) => (this.paymentMethods = methods),
+            next: (methods) => {
+                this.paymentMethods = methods;
+                // Set default payment method if available
+                if (methods.length > 0) {
+                    this.selectedPaymentMethod = methods[0];
+                }
+            },
             error: () => this.showError('Failed to load payment methods')
         });
     }
@@ -191,8 +251,14 @@ export class CompanyPaymentsComponent implements OnInit {
         };
 
         this.paymentService.getPayments(params).subscribe({
-            next: (payments) => (this.payments = payments.data),
-            error: () => this.showError('Failed to load payments'),
+            next: (payments) => {
+                this.payments = payments.data;
+                this.state.totalRecords = payments.meta?.total;
+            },
+            error: () => {
+                this.showError('Failed to load payments');
+                this.loading = false;
+            },
             complete: () => (this.loading = false)
         });
     }
@@ -204,10 +270,14 @@ export class CompanyPaymentsComponent implements OnInit {
 
     editRow(payment: any) {
         this.editingRowId = payment.id;
+        this.editingRowOriginal = { ...payment }; // Store original data for cancel
     }
 
-    cancelEdit() {
+    cancelEdit(payment) {
         this.editingRowId = null;
+        // Restore original data
+        Object.assign(payment, this.editingRowOriginal);
+
     }
 
     savePayment(payment: any) {
@@ -218,9 +288,13 @@ export class CompanyPaymentsComponent implements OnInit {
                 this.editingRowId = null;
                 this.showSuccess('Payment updated');
             },
-            error: () => {
+            error: (err) => {
                 this.saving = false;
-                this.showError('Failed to update payment');
+                console.log(err);
+                this.showError(`${err.error?.message || 'Unknown error'}`);
+                this.editingRowId = null;
+                // Restore original data if save fails
+                Object.assign(payment, this.editingRowOriginal);
             }
         });
     }
@@ -250,36 +324,96 @@ export class CompanyPaymentsComponent implements OnInit {
     }
 
     // Add Payment Logic
-    openAddPaymentDialog() {
+    openAddPaymentCard() {
         if (!this.formGroup.value.selectedCompanyId) {
             this.showError('Please select a company first');
             return;
         }
-        // this.showAddPaymentDialog = true;
-        this.activeAccordianIndex = '0';
+        this.showAddPaymentCard = true;
+
+        this.selectedInvoices.push(
+            {
+                invoice_id: 1,
+                invoice_number: 'INV-001',
+                invoice_date: new Date('2025-01-01 08:54').toISOString(),
+                outstanding_balance: 1000.0,
+                amount_received: 1000.0
+            },
+            {
+                invoice_id: 2,
+                invoice_number: 'INV-002',
+                invoice_date: new Date('2025-02-01').toISOString(),
+                outstanding_balance: 500.0,
+                amount_received: 500.0
+            }
+        );
+    }
+
+    onFilesSelected(event: any) {
+        if (event.files) {
+            this.uploadedFiles.push(event.files[0]);
+        }
+    }
+
+    onFileRemove($event: FileRemoveEvent) {
+        const removedFile = $event.file;
+        this.uploadedFiles = this.uploadedFiles.filter((file) => file.name !== removedFile.name);
+        this.globalMsgService.showMessage({
+            severity: 'info',
+            summary: 'File Removed',
+            detail: `Removed file: ${removedFile.name}`
+        });
+    }
+
+    onClearFiles($event: Event) {
+        this.uploadedFiles = [];
+        this.globalMsgService.showMessage({
+            severity: 'info',
+            summary: 'Files Cleared',
+            detail: 'All uploaded files have been cleared'
+        });
     }
 
     removeSelectedInvoice(inv: any) {
-        this.selectedInvoices = this.selectedInvoices.filter((i) => i.invoice_id !== inv.invoice_id);
+        // show confirmation dialog before removing
+        this.confirmationService.confirm({
+            message: `Are you sure you want to remove invoice ${inv.invoice_number}?`,
+            accept: () => {
+                this.selectedInvoicesForPayment = this.selectedInvoicesForPayment.filter((i) => i.id !== inv.id);
+                this.showSuccess(`Removed invoice ${inv.invoice_number}`);
+            },
+            reject: () => {
+                this.showWarn(`Cancelled removing invoice ${inv.invoice_number}`);
+            }
+        });
     }
 
-    onPaymentsSelected(event: any) {
-        this.selectedInvoicesForPayment = event.invoices.map((inv) => ({
-            ...inv,
-            amount_received: inv.outstanding_balance // default amount received
-        }));
-        this.remarksFromDialog = event.remarks;
-        this.filesFromDialog = event.files;
+    onInvoiceSelected(event: any) {
+        let incomingInvoices =
+            event.invoices.map((inv) => ({
+                ...inv,
+                amount_received: inv.outstanding_balance // default amount received
+            })) || [];
+
+        // if incoming has some overlap invoice, add outstanding balance to existing
+        incomingInvoices.forEach((incomingInv) => {
+            const existingInv = this.selectedInvoicesForPayment.find((inv) => inv.id === incomingInv.id);
+            if (existingInv) {
+                existingInv.amount_received += incomingInv.outstanding_balance;
+            } else {
+                this.selectedInvoicesForPayment.push(incomingInv);
+            }
+        });
     }
 
-    closeAddPaymentDialog() {
-        this.showAddPaymentDialog = false;
+    closeAddInvoiceDialog() {
+        this.showAddInvoiceDialog = false;
     }
 
     onAddPaymentDialogClose() {
         // This ensures complete cleanup
         setTimeout(() => {
-            this.showAddPaymentDialog = false;
+            this.showAddInvoiceDialog = false;
         });
     }
 
@@ -291,22 +425,35 @@ export class CompanyPaymentsComponent implements OnInit {
 
         const formData = new FormData();
         formData.append('company_id', this.formGroup.value.selectedCompanyId.toString());
-        formData.append('payment_date', new Date().toISOString());
-        formData.append('payment_method_id', this.formGroup.value.selectedPaymentMethod || '');
-        formData.append('remarks', this.remarksFromDialog || '');
+        formData.append('payment_date', this.paymentDate.toISOString());
+        formData.append('payment_method_id', this.selectedPaymentMethod?.id || '');
+        formData.append('remarks', this.remarks || '');
+        formData.append('reference_no', this.referenceNumber || '');
 
         this.selectedInvoicesForPayment.forEach((inv, idx) => {
             formData.append(`payments[${idx}][invoice_id]`, inv.id);
             formData.append(`payments[${idx}][amount_received]`, inv.amount_received);
         });
 
-        (this.filesFromDialog || []).forEach((file) => {
+        (this.uploadedFiles || []).forEach((file) => {
             formData.append('files[]', file, file.name);
         });
 
+        this.savingPayment = true;
         this.paymentService.submitMultiplePayments(formData).subscribe({
-            next: () => this.showSuccess('Payments saved'),
-            error: () => this.showError('Failed to save payments')
+            next: () => {
+                this.showSuccess('Payments saved successfully');
+                // reset payment details
+                this.onCardClose();
+                setTimeout(
+                    () => this.loadPayments(this.lastTableEvent),
+                    500
+                );
+            },
+            error: (err) => this.showError(`Failed to save payments: ${err.error?.message || 'Unknown error'}`),
+            complete: () => {
+                this.savingPayment = false;
+            }
         });
     }
 
@@ -318,11 +465,27 @@ export class CompanyPaymentsComponent implements OnInit {
         });
     }
 
+    private showWarn(detail: string) {
+        this.globalMsgService.showMessage({
+            severity: 'Warn',
+            summary: 'Action Cancelled',
+            detail
+        });
+    }
+
     private showSuccess(detail: string) {
         this.globalMsgService.showMessage({
             severity: 'success',
             summary: 'Success',
             detail
         });
+    }
+
+    onCardClose() {
+        this.showAddPaymentCard = false;
+        this.selectedInvoicesForPayment = [];
+        this.remarks = '';
+        this.uploadedFiles = [];
+        this.selectedInvoices = [];
     }
 }
