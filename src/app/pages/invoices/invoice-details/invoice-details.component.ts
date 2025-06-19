@@ -10,7 +10,6 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { toWords } from 'number-to-words';
 import { NgxPrintModule } from 'ngx-print';
-import { OrderByPipe } from '../../../pipes/order-by.pipe';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { StaticAppConfig } from '../../service/config.service';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -24,8 +23,7 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
         Button,
         TableModule,
         Divider,
-        CommonModule,
-        OrderByPipe
+        CommonModule
     ],
     templateUrl: './invoice-details.component.html',
     styleUrl: './invoice-details.component.scss'

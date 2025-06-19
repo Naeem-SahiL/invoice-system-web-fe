@@ -51,7 +51,7 @@ export class AppMenu {
                         icon: 'pi pi-fw pi-file',
                         routerLink: ['/pages/outstanding-invoices']
                     },
-                    { label: 'VAT Report', icon: 'pi pi-fw pi-file-excel', routerLink: ['/pages/company-payments/create'] }
+                    { label: 'VAT Report', icon: 'pi pi-fw pi-file-excel', routerLink: ['/pages/vat-report'] }
                 ]
             },
             {

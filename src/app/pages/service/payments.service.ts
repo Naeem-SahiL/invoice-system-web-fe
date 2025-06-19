@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { StaticAppConfig } from './config.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { formatDate } from '@angular/common';
 
@@ -34,6 +34,20 @@ export class PaymentsService {
     getLegderInvoices(params:any): Observable<any> {
         return this.http.get(this.baseUrl + '/invoices/ledger', {
             params
+        });
+    }
+    getVat(params:any): Observable<any> {
+        return this.http.get(this.baseUrl + '/invoices/vat', {
+            params
+        });
+    }
+    downloadVatReport(params:any): Observable<any> {
+        return this.http.get(this.baseUrl + '/vat-report', {
+            params,
+            responseType: 'blob' as 'json',
+             headers: new HttpHeaders({
+                'Accept': 'application/json+pdf'
+            })
         });
     }
 

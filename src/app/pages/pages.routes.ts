@@ -9,8 +9,9 @@ import { AddEditInvoiceComponent } from './invoices/add-edit-invoice/add-edit-in
 import { InvoiceDetailsComponent } from './invoices/invoice-details/invoice-details.component';
 import { CompanyPaymentsComponent } from './company-payments/company-payments.component';
 import { AddPaymentComponent } from './company-payments/add-payment/add-payment.component';
-import { OutstandingInvoicesComponent } from './outstanding-invoices/outstanding-invoices.component';
+// import { OutstandingInvoicesComponent } from './outstanding-invoices/outstanding-invoices.component';
 import { LedgerInvoicesComponent } from './ledger-invoices/ledger-invoices.component';
+import { VatReportComponent } from './vat-report/vat-report.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -33,16 +34,22 @@ export default [
             { path: 'create', component: AddPaymentComponent },
         ]
     },
-    {
-      path: 'outstanding-invoices',
-        children: [
-            { path: '', component: OutstandingInvoicesComponent }
-        ]
-    },
+    // {
+    //   path: 'outstanding-invoices',
+    //     children: [
+    //         { path: '', component: OutstandingInvoicesComponent }
+    //     ]
+    // },
     {
       path: 'ledger-invoices',
         children: [
             { path : '', component: LedgerInvoicesComponent }
+        ]
+    },
+    {
+      path: 'vat-report',
+        children: [
+            { path : '', component: VatReportComponent }
         ]
     },
     { path: 'empty', component: Empty },
