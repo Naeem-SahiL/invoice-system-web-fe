@@ -16,29 +16,7 @@
                         placeholder="Select Company"
                     ></p-auto-complete>
                 </div>
-                <div class="w-auto">
-                    <p-date-picker
-                        formControlName="fromDate"
-                        inputId="fromDate"
-                        placeholder="From Date"
-                        dateFormat="yy-mm-dd"
-                        icon="pi pi-calendar"
-                        showIcon
-                        class="w-full"
-                    ></p-date-picker>
 
-                </div>
-                <div class="w-auto">
-                    <p-date-picker
-                        formControlName="toDate"
-                        inputId="toDate"
-                        placeholder="To Date"
-                        dateFormat="yy-mm-dd"
-                        icon="pi pi-calendar"
-                        showIcon
-                        class="w-full"
-                    ></p-date-picker>
-                </div>
 
             </div>
         </form>
@@ -46,7 +24,7 @@
     <!--Load button-->
     <ng-template #end>
         <p-button label="Load Invoices" icon="pi pi-refresh" iconPos="right"
-                  (onClick)="loadLedgerInvoices()"
+                  (onClick)="loadOutstandingInvoices()"
                   [disabled]="formGroup.invalid || loading"
         />
     </ng-template>
@@ -57,12 +35,9 @@
 
         <!-- Table -->
         <p-table #dt
-                 [lazy]="true"
-                 [value]="ledgerInvoices"
+                 [value]="outstandingInvoices"
                  [rows]="state.rows"
-                 (onLazyLoad)="onLazyLoad($event)"
                  [first]="state.first"
-                 [showCurrentPageReport]="true"
                  [rowHover]="true" dataKey="id"
                  [rowsPerPageOptions]="[10, 20, 30]"
                  [totalRecords]="state.totalRecords"
@@ -70,24 +45,24 @@
                  [loading]="loading"
                  [tableStyle]="{ 'min-width': '75rem' }"
                  [responsiveLayout]="'scroll'"
-                 [paginator]="true"
+
                  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
         >
 
             <ng-template #caption>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <h5 class="m-0">Ledger Invoices</h5>
-                        <p-button *ngIf="ledgerInvoices?.length > 0 && formGroup.valid"
+                        <h5 class="m-0">Outstanding Invoices</h5>
+                        <p-button *ngIf="outstandingInvoices?.length > 0 && formGroup.valid"
                                   label="Download Report"
                                   [link]="true"
-                                  (onClick)="downloadLdgerReport()"
-                                  [loading]="downloadingLdger"
+                                  (onClick)="downloadOutstandingReport()"
+                                  [loading]="downloadingOutstanding"
                         />
                     </div>
                     <p-iconfield>
                         <p-inputicon styleClass="pi pi-search" />
-                        <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search Inv.#..." />
+                        <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search..." />
                     </p-iconfield>
                 </div>
             </ng-template>
@@ -95,8 +70,8 @@
             // empty caption
             <ng-template pTemplate="emptymessage" let-c>
                 <tr>
-                    <td colspan="7" class="p-4 !text-center">
-                        No invoices found.
+                    <td colspan="4" class="p-4 !text-center">
+                        No outstanding invoices found for the selected company.
                     </td>
                 </tr>
             </ng-template>
@@ -106,10 +81,7 @@
                     <th>Sr.</th>
                     <th>Invoice Date</th>
                     <th>Invoice Number</th>
-                    <th>Total Amount</th>
-                    <th>Received Amount</th>
-                    <th>Payment Date</th>
-                    <th>Balance</th>
+                    <th>Outstanding Balance</th>
                 </tr>
             </ng-template>
 
@@ -118,12 +90,18 @@
                     <td>{{ rowIndex + 1 }}</td>
                     <td>{{ invoice.due_date | date: 'yyyy-MM-dd' }}</td>
                     <td>{{ invoice.invoice_number }}</td>
-                    <td>{{ invoice.total_amount }}</td>
-                    <td>{{ invoice.paid_amount }}</td>
-                    <td>{{ (invoice.payment_date | date: 'yyyy-MM-dd') || '---' }}</td>
-                    <td>{{ invoice.outstanding_balance > 0 ?
-                        (invoice.outstanding_balance | number: '1.3-3') :
-                        '---' }}</td>
+                    <td>{{ invoice.outstanding_balance | number: '1.3-3' }}</td>
+                </tr>
+            </ng-template>
+
+
+            <ng-template pTemplate="footer">
+                <tr *ngIf="outstandingInvoices.length>0" >
+                    <td colspan="2" ></td>
+                    <td class="text-right font-semibold">Total Outstanding:</td>
+                    <td class="font-bold !text-red-700">
+                        {{ getTotalOutstanding() | number: '1.3-3' }}
+                    </td>
                 </tr>
             </ng-template>
 

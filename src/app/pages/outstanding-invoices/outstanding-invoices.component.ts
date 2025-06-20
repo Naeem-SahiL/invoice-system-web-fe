@@ -5,23 +5,23 @@ import { Table, TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePipe, DecimalPipe, formatDate, NgIf } from '@angular/common';
-import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
-import { InputText } from 'primeng/inputtext';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { DatePicker } from 'primeng/datepicker';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Toolbar } from 'primeng/toolbar';
 import { CompaniesService, Company } from '../service/companies.service';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { InputText } from 'primeng/inputtext';
 
 @Component({
-    selector: 'app-ledger-invoices',
-    imports: [Button, Card, DatePipe, DecimalPipe, IconField, InputIcon, InputText, PrimeTemplate, TableModule, AutoComplete, DatePicker, ReactiveFormsModule, Toolbar, NgIf],
-    templateUrl: './ledger-invoices.component.html',
+    selector: 'app-outstanding-invoices',
+    imports: [Button, Card, DatePipe, DecimalPipe, PrimeTemplate, TableModule, AutoComplete, ReactiveFormsModule, Toolbar, NgIf, IconField, InputIcon, InputText],
+    templateUrl: './outstanding-invoices.component.html',
+    styleUrl: './outstanding-invoices.component.scss',
     providers: [PaymentsService, CompaniesService]
 })
-export class LedgerInvoicesComponent {
+export class OutstandingInvoicesComponent {
     state = {
         first: 0,
         rows: 10,
@@ -30,12 +30,13 @@ export class LedgerInvoicesComponent {
     };
 
     formGroup: any;
-    ledgerInvoices: any[] = [];
+    outstandingInvoices: any[] = [];
     companyOptions: Company[];
     filteredCompanies: Company[] | undefined;
 
     loading: boolean = false;
-    downloadingLdger: boolean = false;
+    downloadingOutstanding = false;
+
     private lastTableEvent: any = this.state;
 
     constructor(
@@ -86,27 +87,35 @@ export class LedgerInvoicesComponent {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
-    onLazyLoad(event: any) {
-        if (!this.formGroup.valid) {
-            return;
-        }
-        this.lastTableEvent = event;
-        this.loadLedgerInvoices(event);
-    }
+    // onLazyLoad(event: any) {
+    //     if (!this.formGroup.valid) {
+    //         return;
+    //     }
+    //     this.lastTableEvent = event;
+    //     this.loadOutstandingInvoices(event);
+    // }
 
-    loadLedgerInvoices(event?: any) {
+    loadOutstandingInvoices(event?: any) {
+        this.loading = true;
+
+        const tableEvent = event || this.lastTableEvent;
+        const page = tableEvent.first / tableEvent.rows + 1;
+        const perPage = tableEvent.rows;
         const formValue = this.formGroup.value;
+
         if (!formValue.selectedCompanyId) {
             this.showError('Please select a company first.');
             return;
         }
-        let params = this.getParams( formValue,event);
+        let params = {
+            globalFilter: this.lastTableEvent.globalFilter || '',
+            paginator: false,
+            company_id: formValue.selectedCompanyId.toString()
+        };
 
-        this.loading = true;
-        this.paymentService.getLegderInvoices(params).subscribe({
+        this.paymentService.getOutstandingInvoices(params).subscribe({
             next: (res) => {
-                this.ledgerInvoices = res.data;
-                this.state.totalRecords = res.total;
+                this.outstandingInvoices = res;
                 this.loading = false;
             },
             error: () => {
@@ -116,20 +125,8 @@ export class LedgerInvoicesComponent {
         });
     }
 
-    private getParams( formValue,event?: any) {
-        const tableEvent = event || this.lastTableEvent;
-        const first = tableEvent.first;
-        const perPage = tableEvent.rows;
-
-        let params = {
-            first,
-            globalFilter: this.lastTableEvent.globalFilter || '',
-            company_id: formValue.selectedCompanyId.toString(),
-            per_page: perPage,
-            to_date: formValue.toDate ? formatDate(formValue.toDate, 'yyyy-MM-dd', 'en-US') : '',
-            from_date: formValue.fromDate ? formatDate(formValue.fromDate, 'yyyy-MM-dd', 'en-US') : ''
-        };
-        return params;
+    getTotalOutstanding(): number {
+        return this.outstandingInvoices?.reduce((sum, inv) => sum + (inv.outstanding_balance || 0), 0) || 0;
     }
 
     private showError(detail: string) {
@@ -140,35 +137,36 @@ export class LedgerInvoicesComponent {
         });
     }
 
-    downloadLdgerReport() {
+    downloadOutstandingReport() {
         const formValue = this.formGroup.value;
         if (!formValue.selectedCompanyId) {
             this.showError('Please select a company first.');
-            return;
+            return null;
         }
 
-        let params = this.getParams(formValue);
+        let params = {
+            company_id: formValue.selectedCompanyId.toString()
+        };
 
-        this.downloadingLdger = true;
-        this.paymentService.downloadLedgerReport(params).subscribe({
+        this.downloadingOutstanding = true;
+        this.paymentService.downloadOutstandingReport(params).subscribe({
             next: (res) => {
                 const blob = new Blob([res], { type: 'application/pdf' });
-                const fileName = `LEDGER_REPORT_${this.companyOptions.find(c => c.id === formValue.selectedCompanyId)?.name
-                || 'company'}_${params.from_date}_to_${params.to_date || formatDate(new Date(), 'yyyy-MM-dd', 'en-US')}.pdf`;
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = fileName;
-                link.click();
-                window.URL.revokeObjectURL(url);
+               const fileName =
+                   `${this.companyOptions.find(c => c.id === formValue.selectedCompanyId)?.name
+                   || 'company'}_OUTSTANDING REPORT_${formatDate(new Date(), 'yyyy-MM-dd_HH:mm', 'en-US')}.pdf`;
+               const url = window.URL.createObjectURL(blob);
+               const link = document.createElement('a');
+               link.href = url;
+               link.download = fileName;
+               link.click();
+               window.URL.revokeObjectURL(url);
             },
             error: () => {
                 this.showError('Failed to download report.');
-                this.downloadingLdger = false;
+                this.downloadingOutstanding = false;
             },
-            complete: () => {
-                this.downloadingLdger = false;
-            }
+            complete: () => {this.downloadingOutstanding= false}
         });
     }
 }

@@ -1,21 +1,9 @@
 <p-toolbar styleClass="mb-6">
     <!--       Fields Input-->
     <ng-template #start>
-        <form [formGroup]="formGroup">
+        <form [formGroup]="formGroup" >
             <div class="flex flex-row gap-3 justify-start">
-                <!-- <div class="w-auto">
-                    <p-auto-complete
-                        [required]="true"
-                        inputId="id"
-                        [dropdown]="true"
-                        [suggestions]="filteredCompanies ?? []"
-                        (completeMethod)="filterCompany($event)"
-                        field="name"
-                        class="w-full"
-                        (onSelect)="onCompanySelect($event)"
-                        placeholder="Select Company"
-                    ></p-auto-complete>
-                </div> -->
+
                 <div class="w-auto">
                     <p-date-picker
                         formControlName="fromDate"
@@ -26,6 +14,7 @@
                         showIcon
                         class="w-full"
                         [required]="formGroup.controls['fromDate'].required"
+                        (invalid)="console.log('invalid')"
                     ></p-date-picker>
 
                 </div>
@@ -90,8 +79,11 @@
                     <div class="flex items-center">
                         <h5 class="m-0">Vat Report</h5>
                         <p-button *ngIf="vatInvoices?.length > 0 && formGroup.valid"
-                            label="Download Report" [link]="true"
-                            (onClick)="downloadVatReport()"/>
+                                  label="Download Report"
+                                  [link]="true"
+                                  (onClick)="downloadVatReport()"
+                                  [loading]="downloadingVat"
+                        />
                     </div>
                     <p-iconfield>
                         <p-inputicon styleClass="pi pi-search" />

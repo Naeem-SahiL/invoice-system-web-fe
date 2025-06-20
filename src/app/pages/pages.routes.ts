@@ -12,6 +12,7 @@ import { AddPaymentComponent } from './company-payments/add-payment/add-payment.
 // import { OutstandingInvoicesComponent } from './outstanding-invoices/outstanding-invoices.component';
 import { LedgerInvoicesComponent } from './ledger-invoices/ledger-invoices.component';
 import { VatReportComponent } from './vat-report/vat-report.component';
+import { OutstandingInvoicesComponent } from './outstanding-invoices/outstanding-invoices.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -34,12 +35,12 @@ export default [
             { path: 'create', component: AddPaymentComponent },
         ]
     },
-    // {
-    //   path: 'outstanding-invoices',
-    //     children: [
-    //         { path: '', component: OutstandingInvoicesComponent }
-    //     ]
-    // },
+    {
+      path: 'outstanding-invoices',
+        children: [
+            { path: '', component: OutstandingInvoicesComponent }
+        ]
+    },
     {
       path: 'ledger-invoices',
         children: [

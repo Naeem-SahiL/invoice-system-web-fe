@@ -4,20 +4,25 @@ import { GlobalMessageService } from '../../service/global-message.service';
 import { Card } from 'primeng/card';
 import { Table, TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
-import { FileRemoveEvent, FileUpload } from 'primeng/fileupload';
-import { Textarea } from 'primeng/textarea';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe, NgForOf, NgIf } from '@angular/common';
-import { InputGroup } from 'primeng/inputgroup';
-import { InputGroupAddon } from 'primeng/inputgroupaddon';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
-import { FloatLabel } from 'primeng/floatlabel';
 
 @Component({
     selector: 'app-add-payment',
-    imports: [Card, TableModule, Button, FileUpload, Textarea, FormsModule, DatePipe, DecimalPipe, InputGroup, InputGroupAddon, InputText, IconField, InputIcon, FloatLabel, NgIf, NgForOf],
+    imports: [
+        Card,
+        TableModule,
+        Button,
+        FormsModule,
+        DatePipe,
+        DecimalPipe,
+        InputText,
+        IconField,
+        InputIcon
+    ],
     templateUrl: './add-payment.component.html',
     styleUrl: './add-payment.component.scss'
 })
@@ -72,7 +77,7 @@ export class AddPaymentComponent implements OnInit {
             rows: this.lastTableEvent.rows,
             globalFilter: this.lastTableEvent.globalFilter || '',
             company_id: this.companyId.toString()
-        }
+        };
 
         this.paymentService.getOutstandingInvoices(params).subscribe({
             next: (res) => {
@@ -116,23 +121,22 @@ export class AddPaymentComponent implements OnInit {
     private processPrevSelectedInvoices() {
         if (this.prevSelectedInvoices && this.prevSelectedInvoices.length) {
             let invoicesFullyPaid = [];
-            this.outstandingInvoices.forEach(invoice => {
+            this.outstandingInvoices.forEach((invoice) => {
                 // subtract the amount already paid
-                const prevInvoice = this.prevSelectedInvoices.find(prev => prev.id === invoice.id);
+                const prevInvoice = this.prevSelectedInvoices.find((prev) => prev.id === invoice.id);
                 if (prevInvoice) {
                     invoice.outstanding_balance = parseFloat(invoice.outstanding_balance) - parseFloat(prevInvoice.amount_received);
-                    if (invoice.outstanding_balance == 0.000){
+                    if (invoice.outstanding_balance == 0.0) {
                         invoicesFullyPaid.push(invoice);
                     }
                 }
             });
 
-            if(invoicesFullyPaid.length > 0){
-                this.outstandingInvoices = this.outstandingInvoices.filter(invoice => invoicesFullyPaid.indexOf(invoice) === -1);
+            if (invoicesFullyPaid.length > 0) {
+                this.outstandingInvoices = this.outstandingInvoices.filter((invoice) => invoicesFullyPaid.indexOf(invoice) === -1);
             }
         } else {
             this.selectedInvoices = [];
         }
-
     }
 }

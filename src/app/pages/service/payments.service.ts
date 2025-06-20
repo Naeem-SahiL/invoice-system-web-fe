@@ -50,6 +50,24 @@ export class PaymentsService {
             })
         });
     }
+    downloadOutstandingReport(params:any): Observable<any> {
+        return this.http.get(this.baseUrl + '/outstanding-report', {
+            params,
+            responseType: 'blob' as 'json',
+             headers: new HttpHeaders({
+                'Accept': 'application/json+pdf'
+            })
+        });
+    }
+    downloadLedgerReport(params:any): Observable<any> {
+        return this.http.get(this.baseUrl + '/ledger-report', {
+            params,
+            responseType: 'blob' as 'json',
+             headers: new HttpHeaders({
+                'Accept': 'application/json+pdf'
+            })
+        });
+    }
 
     submitMultiplePayments(formData: FormData) {
         return this.http.post(this.baseUrl + '/invoice-payments/multiple', formData);
