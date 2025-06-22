@@ -60,6 +60,10 @@ export class AppMenu {
                     { label: 'Ledger Invoices', icon: 'pi pi-fw pi-file', routerLink: ['/pages/ledger-invoices'] }
                 ]
             },
+            {
+                label: 'Users',
+                items: [{ label: 'Users List', icon: 'pi pi-fw pi-users', routerLink: ['/pages/users'] }]
+            }
             // {
             //     label: 'Settings',
             //     items: [
