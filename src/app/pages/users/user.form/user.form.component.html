@@ -1,0 +1,97 @@
+<p-toolbar styleClass="mb-6 flex items-center justify-between">
+   <ng-template #start>
+       <h3 class="text-xl font-semibold my-auto">{{ isEditMode? 'Edit User':'Add User' }}</h3>
+   </ng-template>
+
+    <ng-template #end>
+        <!-- <p-button label="Export" icon="pi pi-upload" class="mr-2" severity="secondary" (onClick)="exportCSV()" /> -->
+        <!-- reload icon -->
+        <p-button label="Back to Users" icon="pi pi-arrow-left" severity="secondary" (onClick)="router.navigate(['/pages/users'])" />
+    </ng-template>
+</p-toolbar>
+
+<div class=" rounded-lg shadow p-6 max-w-4xl mx-auto">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="first_name" class="block  font-medium ">First Name</label>
+                <input
+                    id="first_name"
+                    type="text"
+                    class="mt-1 block w-full border  rounded-md shadow-sm p-2  "
+                    formControlName="first_name"
+                />
+            </div>
+
+            <div>
+                <label for="last_name" class="block  font-medium ">Last Name</label>
+                <input
+                    id="last_name"
+                    type="text"
+                    class="mt-1 block w-full border  rounded-md shadow-sm p-2  "
+                    formControlName="last_name"
+                />
+            </div>
+
+            <div>
+                <label for="user_name" class="block  font-medium ">User Name</label>
+                <input
+                    id="user_name"
+                    type="text"
+                    class="mt-1 block w-full border  rounded-md shadow-sm p-2  "
+                    formControlName="user_name"
+                />
+            </div>
+
+            <div *ngIf="!isEditMode">
+                <label for="password" class="block  font-medium ">Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    class="mt-1 block w-full border  rounded-md shadow-sm p-2  "
+                    formControlName="password"
+                />
+            </div>
+
+            <div>
+                <label for="roles" class="block  font-medium ">Roles</label>
+                <p-multiSelect
+                    [options]="roles"
+                    optionLabel="name"
+                    optionValue="id"
+                    formControlName="roles"
+                    placeholder="Select roles"
+                    class="w-full mt-1"
+                ></p-multiSelect>
+            </div>
+
+            <div class="flex items-center mt-6">
+                <input
+                    id="is_active"
+                    type="checkbox"
+                    class="h-4 w-4   rounded"
+                    formControlName="is_active"
+                />
+                <label for="is_active" class="ml-2 block  ">Is Active</label>
+            </div>
+        </div>
+
+        <div class="flex gap-2 justify-end">
+            <p-button
+                type="submit"
+                [loading]="saving"
+                [disabled]="userForm.invalid"
+            >
+                Save
+            </p-button>
+
+            <p-button
+                type="button"
+                (click)="router.navigate(['/pages/users'])"
+            >
+                Cancel
+            </p-button>
+        </div>
+    </form>
+</div>

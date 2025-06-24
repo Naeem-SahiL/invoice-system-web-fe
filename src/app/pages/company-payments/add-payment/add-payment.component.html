@@ -1,0 +1,76 @@
+<p-card>
+    <div class="p-fluid">
+
+        <!-- Table -->
+        <p-table #dt
+                 [value]="outstandingInvoices"
+                 selectionMode="multiple"
+                 [(selection)]="selectedInvoices"
+                 [paginator]="true"
+                 [rows]="10"
+                 [lazy]="true"
+                 [first]="state.first"
+                 [showCurrentPageReport]="true"
+                 [rowHover]="true" dataKey="id"
+                 (onLazyLoad)="onLazyLoad($event)"
+                 [rowsPerPageOptions]="[10, 20, 30]"
+                 [totalRecords]="state.totalRecords"
+                 [globalFilterFields]="['invoice_number', 'due_date']"
+                 [loading]="loading"
+                 [tableStyle]="{ 'min-width': '75rem' }"
+                 [responsiveLayout]="'scroll'"
+
+                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
+        >
+
+            <ng-template #caption>
+                <div class="flex items-center justify-between">
+                    <h5 class="m-0">Add Payments</h5>
+                    <p-iconfield>
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search..." />
+                    </p-iconfield>
+                </div>
+            </ng-template>
+
+            // empty caption
+            <ng-template pTemplate="emptymessage" let-c>
+                <tr>
+                    <td colspan="4" class="p-4 !text-center">
+                        No outstanding invoices found for the selected company.
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 3rem;">
+                        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                    </th>
+                    <th>Invoice Number</th>
+                    <th>Due Date</th>
+                    <th>Outstanding Balance</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-invoice>
+                <tr [pSelectableRow]="invoice">
+                    <td>
+                        <p-tableCheckbox [value]="invoice"></p-tableCheckbox>
+                    </td>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.due_date | date: 'shortDate' }}</td>
+                    <td>{{ invoice.outstanding_balance | number: '1.3-3' }}</td>
+                </tr>
+            </ng-template>
+
+        </p-table>
+
+        <!-- Actions -->
+        <div class="p-field mt-4 text-right">
+            <p-button label="Done" icon="pi pi-check" (onClick)="done()" [disabled]="loading"></p-button>
+            <p-button label="Cancel" icon="pi pi-times" class="p-button-secondary ml-2" (onClick)="onClose()"></p-button>
+        </div>
+
+    </div>
+</p-card>

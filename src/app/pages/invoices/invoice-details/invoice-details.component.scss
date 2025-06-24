@@ -1,0 +1,37 @@
+.bordered-table, .bordered-table th, .bordered-table td {
+    @apply border border-gray-400;
+}
+//
+//@media print {
+//    body * {
+//        visibility: hidden !important;
+//    }
+//
+//    #print-section, #print-section * {
+//        visibility: visible !important;
+//    }
+//
+//    #print-section {
+//        position: absolute;
+//        left: 0;
+//        top: 0;
+//        width: 794px; /* A4 width */
+//        padding: 20px;
+//    }
+//
+//    button, .p-button, .p-progressbar {
+//        display: none !important;
+//    }
+//}
+
+
+.arabic-heading {
+    font-family: 'Amiri', serif;
+    font-size: 24px;
+    direction: rtl;
+
+}
+
+.highlight{
+    @apply text-blue-600;
+}

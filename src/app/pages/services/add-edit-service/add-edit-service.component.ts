@@ -12,6 +12,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { ServiceItem, ServicesService } from '../../service/services.service';
 import { Message } from 'primeng/message';
 import { MessageService } from 'primeng/api';
+import { LookupsService } from '../../service/lookups.service';
 
 @Component({
     selector: 'app-add-edit-service',
@@ -34,12 +35,13 @@ export class AddEditServiceComponent {
     constructor(
         private fb: FormBuilder,
         private _service: ServicesService,
+        private lookupsService: LookupsService, // Assuming this is the service to fetch lookups
         private messageService: MessageService
     ) {}
 
     ngOnInit() {
         // Fetch service types from the service
-        this._service.getServiceTypeLookup().subscribe((data) => {
+        this.lookupsService.getLookupBytype("service_type").subscribe((data) => {
             this.serviceTypes = data.map((item) => ({
                 id: item.id,
                 value: item.visible_value

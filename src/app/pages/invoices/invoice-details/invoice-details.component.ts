@@ -8,12 +8,18 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Divider } from 'primeng/divider';
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { toWords } from 'number-to-words';
+import { NgxPrintModule } from 'ngx-print';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { StaticAppConfig } from '../../service/config.service';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
 
 @Component({
     selector: 'app-invoice-details',
     imports: [
         ProgressBar,
+        NgxPrintModule,
         Button,
         TableModule,
         Divider,
@@ -23,15 +29,23 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
     styleUrl: './invoice-details.component.scss'
 })
 export class InvoiceDetailsComponent implements OnInit {
+    private invoicePdfUrl = StaticAppConfig.get('apiBaseUrl') + '/pdf-report/';
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private invoiceService: InvoiceService
+        private invoiceService: InvoiceService,
+        private sanitizer: DomSanitizer
 
     ) {}
     invoiceId: string = '';
     invoice: Invoice | null = null;
     loading: boolean = true;
+
+    pdfUrlSafe: SafeResourceUrl
+
+
+
     ngOnInit(): void {
         this.invoiceId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -39,6 +53,7 @@ export class InvoiceDetailsComponent implements OnInit {
             this.invoiceService.getInvoiceById(this.invoiceId).subscribe({
                 next: (data) => {
                     this.invoice = data;
+                    this.fillImportExportServiceItems();
                     this.loading = false;
                 },
                 error: (err) => {
@@ -46,6 +61,9 @@ export class InvoiceDetailsComponent implements OnInit {
                     this.loading = false;
                 }
             });
+
+            this.invoicePdfUrl = this.invoicePdfUrl + this.invoiceId;
+            this.pdfUrlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.invoicePdfUrl);
         } else {
             console.error('No invoice ID provided in route');
             this.loading = false;
@@ -57,100 +75,53 @@ export class InvoiceDetailsComponent implements OnInit {
         this.router.navigate(['pages/invoices']);
     }
 
-    printInvoice() {
-
+    fillImportExportServiceItems() {
+        // if (this.invoice) {
+        //     this.importServiceItems = this.invoice.items.filter(item => item.service?.service_type?.hidden_value === 'IMP');
+        //     this.exportServiceItems = this.invoice.items.filter(item => item.service?.service_type?.hidden_value === 'EXP');
+        //
+        //     console.log(this.exportServiceItems, this.importServiceItems);
+        // }
     }
 
-    downloadPDF() {
-        const docDefinition: any = {
-    content: [
-      { text: 'Invoice Details', style: 'header' },
-      {
-        columns: [
-          [
-            { text: `Invoice #: ${this.invoice?.invoice_number}`, style: 'subheader' },
-            { text: `Invoice Date: ${this.invoice?.invoice_date}` },
-          ],
-        ],
-        margin: [0, 0, 0, 10],
-      },
-      {
-        text: `Company: ${this.invoice?.company?.name}`,
-        margin: [0, 0, 0, 2],
-        bold: true,
-      },
-      {
-        text: `Company Address: ${this.invoice?.company?.address}`,
-        margin: [0, 0, 0, 2],
-      },
-      {
-        text: `Remarks: ${this.invoice?.remarks}`,
-        margin: [0, 0, 0, 10],
-      },
-      {
-        table: {
-          headerRows: 1,
-          widths: ['auto', '*', '*', 'auto', 'auto', 'auto', 'auto'],
-          body: [
-            [
-              { text: 'Sr.', style: 'tableHeader' },
-              { text: 'Description', style: 'tableHeader' },
-              { text: 'Service Name', style: 'tableHeader' },
-              { text: 'QTY', style: 'tableHeader' },
-              { text: 'Rate', style: 'tableHeader' },
-              { text: 'Vat Amount', style: 'tableHeader' },
-              { text: 'Total Amount', style: 'tableHeader' },
-            ],
-            ...(this.invoice?.items || []).map((item: any) => [
-              item.sr_no_group,
-              item.description,
-              item.service?.name || '',
-              item.quantity,
-              item.rate,
-              item.vat_amount,
-              item.total_amount,
-            ]),
-          ],
-        },
-        layout: 'lightHorizontalLines',
-        margin: [0, 0, 0, 10],
-      },
-      {
-        style: 'summaryTable',
-        table: {
-          widths: ['*', 'auto'],
-          body: [
-            ['Gross Amount:', this.invoice?.gross_amount],
-            ['VAT Amount:', this.invoice?.vat_amount],
-            ['Total Amount:', this.invoice?.total_amount],
-          ],
-        },
-        layout: 'noBorders',
-      },
-    ],
-    styles: {
-      header: {
-        fontSize: 16,
-        bold: true,
-        margin: [0, 0, 0, 10],
-      },
-      subheader: {
-        fontSize: 12,
-        bold: true,
-      },
-      tableHeader: {
-        bold: true,
-        fillColor: '#eeeeee',
-      },
-      summaryTable: {
-        margin: [0, 10, 0, 0],
-      },
-    },
-    defaultStyle: {
-      fontSize: 10,
-    },
-  };
+    totalAmountInWords() {
+      if (this.invoice?.total_amount === undefined || this.invoice?.total_amount === null) return '';
 
-  pdfMake.createPdf(docDefinition).download(`Invoice_${this.invoice?.invoice_number}.pdf`);
+        const amount = Number(this.invoice.total_amount);
+        const riyals = Math.floor(amount);
+        const baiza = Math.round((amount - riyals) * 1000);
+        let words = `Riyals Omani ${toWords(riyals)}`;
+        if (baiza > 0) {
+            words += ` and ${toWords(baiza)} Baiza`;
+        }
+        return words + ' Only';
+    }
+
+    pprintInvoice() {
+        // check if theme is dark mode, if so, change it to light mode for printing
+        if (document.body.classList.contains('dark')) {
+            document.body.classList.remove('dark');
+        }
+
+
+        document.body.classList.add('print-mode');
+        setTimeout(() => {
+            window.print();
+            // After printing, remove the print mode class
+            // and reapply dark mode if it was previously enabled
+            if (document.body.classList.contains('dark')) {
+                document.body.classList.add('dark');
+            }
+            document.body.classList.remove('print-mode');
+        }, 100);
+    }
+
+    getYearFromInvoiceDate() {
+        if (this.invoice?.invoice_date) {
+            const [day, month, year] = this.invoice.invoice_date.split('-');
+            const date = new Date(+year, +month - 1, +day);
+            return date.getFullYear().toString().slice(-2) + '/';
+        }
+        return '';
     }
 }

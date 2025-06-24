@@ -1,0 +1,13 @@
+.card-animate {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s;
+    max-height: 0;
+    opacity: 0;
+}
+.card-open.card-animate {
+    max-height: 500px; /* adjust as needed */
+    opacity: 1;
+}
+.card-content-animate {
+    transition: opacity 0.4s;
+}

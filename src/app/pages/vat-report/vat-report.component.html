@@ -1,0 +1,136 @@
+<p-toolbar styleClass="mb-6">
+    <!--       Fields Input-->
+    <ng-template #start>
+        <form [formGroup]="formGroup" >
+            <div class="flex flex-row gap-3 justify-start">
+
+                <div class="w-auto">
+                    <p-date-picker
+                        formControlName="fromDate"
+                        inputId="fromDate"
+                        placeholder="From Date"
+                        dateFormat="yy-mm-dd"
+                        icon="pi pi-calendar"
+                        showIcon
+                        class="w-full"
+                        [required]="formGroup.controls['fromDate'].required"
+                        (invalid)="console.log('invalid')"
+                    ></p-date-picker>
+
+                </div>
+                <div class="w-auto">
+                    <p-date-picker
+                        formControlName="toDate"
+                        inputId="toDate"
+                        placeholder="To Date"
+                        dateFormat="yy-mm-dd"
+                        icon="pi pi-calendar"
+                        showIcon
+                        class="w-full"
+                    ></p-date-picker>
+                </div>
+
+                 <div class="flex items-center">
+                    <p-checkbox
+                    name="pizza"
+                    [binary]="true"
+                    [(ngModel)]="enablePaginator"
+                    [ngModelOptions]="{standalone: true}"
+                    inputId="enablePaginator" />
+                    <label for="enablePaginator" class="ml-2">Enable Paginator</label>
+                </div>
+
+            </div>
+        </form>
+    </ng-template>
+    <!--Load button-->
+    <ng-template #end>
+        <p-button label="Load Vat" icon="pi pi-refresh" iconPos="right"
+                  (onClick)="loadVatReport()"
+                  [disabled]="loading"
+        />
+    </ng-template>
+</p-toolbar>
+
+<p-card>
+    <div class="p-fluid">
+
+        <!-- Table -->
+        <p-table #dt
+                 [lazy]="true"
+                 [value]="vatInvoices"
+                 [rows]="state.rows"
+                 (onLazyLoad)="onLazyLoad($event)"
+                 [first]="state.first"
+                 [showCurrentPageReport]="true"
+                 [rowHover]="true" dataKey="id"
+                 [rowsPerPageOptions]="[10, 20, 30]"
+                 [totalRecords]="state.totalRecords"
+                 [globalFilterFields]="['invoice_number', 'due_date']"
+                 [loading]="loading"
+                 [tableStyle]="{ 'min-width': '75rem' }"
+                 [responsiveLayout]="'scroll'"
+                 [paginator]="enablePaginator"
+                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
+        >
+
+            <ng-template #caption>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <h5 class="m-0">Vat Report</h5>
+                        <p-button *ngIf="vatInvoices?.length > 0 && formGroup.valid"
+                                  label="Download Report"
+                                  [link]="true"
+                                  (onClick)="downloadVatReport()"
+                                  [loading]="downloadingVat"
+                        />
+                    </div>
+                    <p-iconfield>
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search Inv.#..." />
+                    </p-iconfield>
+                </div>
+            </ng-template>
+
+            // empty caption
+            <ng-template pTemplate="emptymessage" let-c>
+                <tr>
+                    <td colspan="7" class="p-4 !text-center">
+                        No invoices found.
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Sr.</th>
+                    <th>Invoice Date</th>
+                    <th>Invoice Number</th>
+                    <th>Invoice Vat Amount</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-invoice let-rowIndex="rowIndex">
+                <tr [pSelectableRow]="invoice">
+                    <td>{{ rowIndex + 1 }}</td>
+                    <td>{{ invoice.invoice_date | date: 'yyyy-MM-dd' }}</td>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.vat_amount }}</td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <tr>
+                    <td colspan="2"></td>
+                    <td><strong>Total VAT</strong></td>
+                    <td><strong>{{ totalVatAmount | number: '1.3-3' }}</strong></td>
+                </tr>
+            </ng-template>
+
+
+
+        </p-table>
+
+
+    </div>
+</p-card>

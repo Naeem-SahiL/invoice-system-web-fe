@@ -1,0 +1,120 @@
+<form [formGroup]="group" >
+
+    <div class="flex flex-col gap-4 mb-4">
+        <div class="flex flex-row gap-4">
+            <div class="flex flex-col flex-1">
+                <label for="title" class="mr-2">Group Title *</label>
+                <input id="title" formControlName="title"
+                       pInputText class="p-inputtext w-full" />
+                <p-message *ngIf="group.get('title')?.invalid && group.get('title')?.touched"
+                           severity="error" variant="simple" size="small">Required</p-message>
+            </div>
+            <div class="flex-1"></div>
+            <div class="flex-1"></div>
+        </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-4">
+        <div  class="flex flex-col w-full">
+            <label for="inputType" class="mr-2">Input Type *</label>
+            <p-select id="inputType" [options]="inputTypes" [optionLabel]="'label'" (onChange)="inputTypeChange($event.value)" ></p-select>
+        </div>
+
+        <div class="flex flex-col w-full" *ngIf="!group.get('blNo')?.disabled">
+            <label for="blNo" class="mr-2">BL No</label>
+            <input id="blNo" formControlName="blNo"
+                   pInputText class="p-inputtext w-full"  />
+            <p-message *ngIf="group.get('blNo')?.invalid && group.get('blNo')?.touched"
+                       severity="error" variant="simple" size="small">Required</p-message>
+        </div>
+
+        <div class="flex flex-col w-full" *ngIf="!group.get('customerInvoiceNo')?.disabled">
+            <label for="customerInvoiceNo" class="mr-2">Customer Invoice Number *</label>
+            <input id="customerInvoiceNo" type="text" formControlName="customerInvoiceNo"
+                   pInputText class="p-inputtext w-full" />
+            <p-message *ngIf="group.get('customerInvoiceNo')?.invalid && group.get('customerInvoiceNo')?.touched"
+                   severity="error" variant="simple" size="small">Required</p-message>
+        </div>
+
+        <div class="flex flex-col w-full">
+            <label for="declarationNo" class="mr-2">Declaration No </label>
+            <input id="declarationNo" formControlName="declarationNo"
+                   pInputText class="p-inputtext w-full" />
+            <p-message *ngIf="group.get('declarationNo')?.invalid && group.get('declarationNo')?.touched"
+                       severity="error" variant="simple" size="small">Required</p-message>
+        </div>
+
+
+    </div>
+</form>
+
+
+
+<p-table [value]="group.get('items')?.value ?? []" dataKey="id" [tableStyle]="{ 'min-width': '50rem' }"
+
+>
+
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <div  class="flex items-center gap-2">
+
+            <span class="text-xl font-bold">Invoice Items</span>
+            <p-message *ngIf="group.get('items')?.value?.length < 1"
+                       severity="error" variant="simple" size="small">At least one item is required</p-message>
+            </div>
+            <p-button icon="pi pi-plus" rounded raised (onClick)="addInvoiceItem()" />
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="min-width: 18rem; width: 30%;">Description</th>
+            <th style="min-width: 10rem; width: 15%;">Service Name</th>
+            <th style="min-width: 8rem; width: 15%;">QTY</th>
+            <th style="min-width: 8rem; width: 15%;">Rate</th>
+            <th style="min-width: 8rem; width: 15%;">Amount</th>
+            <th style="min-width: 8rem; width: 15%;">Vat Amount</th>
+            <th style="min-width: 12rem; width: 20%;">Total Amount</th>
+            <th style="min-width: 8rem; "></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-item let-index>
+        <tr>
+
+            <td>
+                {{ item.description }}
+            </td>
+            <td>
+                {{ item.service.name }}
+            </td>
+            <td>
+                {{ item.quantity }}
+            </td>
+            <td>
+                {{ item.rate }}
+            </td>
+            <td>
+                {{ item.amount }}
+            </td>
+            <td>
+                {{ item.vat_amount }}
+            </td>
+            <td>
+                {{ item.total_amount }}
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                          (onClick)="editInvoiceItem(item)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                          (onClick)="deleteInvoiceItem( item)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+
+<p-toast />
+
+
+<app-add-edit-invoice-item [visible]="invoiceItemDialogueVisible" [invoiceItem]="selectedItem"
+                           (close)="hideDialog()" (save)="saveInvoiceItem($event)"></app-add-edit-invoice-item>
+

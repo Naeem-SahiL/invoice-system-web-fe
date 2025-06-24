@@ -1,0 +1,112 @@
+<p-toolbar styleClass="mb-6">
+    <!--       Fields Input-->
+    <ng-template #start>
+        <form [formGroup]="formGroup">
+            <div class="flex flex-row gap-3 justify-start">
+                <div class="w-auto">
+                    <p-auto-complete
+                        [required]="true"
+                        inputId="id"
+                        [dropdown]="true"
+                        [suggestions]="filteredCompanies ?? []"
+                        (completeMethod)="filterCompany($event)"
+                        field="name"
+                        class="w-full"
+                        (onSelect)="onCompanySelect($event)"
+                        placeholder="Select Company"
+                    ></p-auto-complete>
+                </div>
+
+
+            </div>
+        </form>
+    </ng-template>
+    <!--Load button-->
+    <ng-template #end>
+        <p-button label="Load Invoices" icon="pi pi-refresh" iconPos="right"
+                  (onClick)="loadOutstandingInvoices()"
+                  [disabled]="formGroup.invalid || loading"
+        />
+    </ng-template>
+</p-toolbar>
+
+<p-card>
+    <div class="p-fluid">
+
+        <!-- Table -->
+        <p-table #dt
+                 [value]="outstandingInvoices"
+                 [rows]="state.rows"
+                 [first]="state.first"
+                 [rowHover]="true" dataKey="id"
+                 [rowsPerPageOptions]="[10, 20, 30]"
+                 [totalRecords]="state.totalRecords"
+                 [globalFilterFields]="['invoice_number', 'due_date']"
+                 [loading]="loading"
+                 [tableStyle]="{ 'min-width': '75rem' }"
+                 [responsiveLayout]="'scroll'"
+
+                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
+        >
+
+            <ng-template #caption>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <h5 class="m-0">Outstanding Invoices</h5>
+                        <p-button *ngIf="outstandingInvoices?.length > 0 && formGroup.valid"
+                                  label="Download Report"
+                                  [link]="true"
+                                  (onClick)="downloadOutstandingReport()"
+                                  [loading]="downloadingOutstanding"
+                        />
+                    </div>
+                    <p-iconfield>
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" (input)="onGlobalFilter(dt,$event)" placeholder="Search..." />
+                    </p-iconfield>
+                </div>
+            </ng-template>
+
+            // empty caption
+            <ng-template pTemplate="emptymessage" let-c>
+                <tr>
+                    <td colspan="4" class="p-4 !text-center">
+                        No outstanding invoices found for the selected company.
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Sr.</th>
+                    <th>Invoice Date</th>
+                    <th>Invoice Number</th>
+                    <th>Outstanding Balance</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-invoice let-rowIndex="rowIndex">
+                <tr [pSelectableRow]="invoice">
+                    <td>{{ rowIndex + 1 }}</td>
+                    <td>{{ invoice.due_date | date: 'yyyy-MM-dd' }}</td>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.outstanding_balance | number: '1.3-3' }}</td>
+                </tr>
+            </ng-template>
+
+
+            <ng-template pTemplate="footer">
+                <tr *ngIf="outstandingInvoices.length>0" >
+                    <td colspan="2" ></td>
+                    <td class="text-right font-semibold">Total Outstanding:</td>
+                    <td class="font-bold !text-red-700">
+                        {{ getTotalOutstanding() | number: '1.3-3' }}
+                    </td>
+                </tr>
+            </ng-template>
+
+        </p-table>
+
+
+    </div>
+</p-card>

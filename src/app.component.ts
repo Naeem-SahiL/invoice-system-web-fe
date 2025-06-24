@@ -23,12 +23,9 @@ export class AppComponent implements OnInit {
         private GlobalMessageService: GlobalMessageService,
         private messageService: MessageService
     ) {
-
     }
     ngOnInit() {
-         console.log('AppComponent initialized');
         this.GlobalMessageService.message$.subscribe(message => {
-            console.log('Received message:', message);
             this.messageService.add(message);
         });
     }

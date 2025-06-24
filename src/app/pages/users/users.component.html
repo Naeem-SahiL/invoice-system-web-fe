@@ -1,0 +1,105 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedUsers()"
+                  [disabled]="!selectedUsers || !selectedUsers.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <!-- <p-button label="Export" icon="pi pi-upload" class="mr-2" severity="secondary" (onClick)="exportCSV()" /> -->
+        <!-- reload icon -->
+        <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadUsers()" />
+    </ng-template>
+</p-toolbar>
+
+
+<p-table #dt
+         [value]="users"
+         [(selection)]="selectedUsers"
+         dataKey="id"
+            [loading]="userLoading"
+         [paginator]="true"
+         [rows]="10"
+         [globalFilterFields]="['first_name', 'last_name', 'user_name']"
+         [filters]="{ global: { value: globalFilter, matchMode: 'contains' } }"
+         selectionMode="multiple"
+>
+
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Manage Companies</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search"/>
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..."/>
+            </p-iconfield>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>User Name</th>
+            <th>Roles</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-user>
+        <tr>
+            <td>
+                <p-tableCheckbox [value]="user"></p-tableCheckbox>
+            </td>
+            <td>{{ user.first_name }}</td>
+            <td>{{ user.last_name }}</td>
+            <td>{{ user.user_name }}</td>
+            <td>
+                <span *ngFor="let role of user.roles" class="badge badge-secondary mr-1">
+                    {{ role.name }}
+                </span>
+                <span *ngIf="!user.roles.length">No roles</span>
+            </td>
+
+
+            <td>
+          <span [ngClass]="user.is_active ? 'text-green-500' : 'text-red-500'">
+            {{ user.is_active ? 'Active' : 'Inactive' }}
+          </span>
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" outlined class="mr-2"
+                          (onClick)="editUser(user)"></p-button>
+                <p-button icon="pi pi-trash" severity="danger" outlined  class="mr-2"
+                          (onClick)="deleteUser(user)"></p-button>
+                <p-button icon="pi pi-key" severity="secondary" outlined
+                          (onClick)="openPasswordDialog(user.id)"></p-button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Dialog component -->
+
+    <p-dialog
+        [(visible)]="showPasswordDialog"
+        *ngIf="showPasswordDialog"
+        modal
+        header="Change Password"
+        [style]="{ width: '400px' }"
+        (onHide)="showPasswordDialog = false">
+
+    <app-change-password
+
+        [visible]="showPasswordDialog"
+        [userId]="selectedUserId"
+        (close)="showPasswordDialog = false"
+        (passwordChanged)="onPasswordChanged($event)"
+    ></app-change-password>
+    </p-dialog>
+
+
+

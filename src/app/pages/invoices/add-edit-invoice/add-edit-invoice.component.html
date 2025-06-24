@@ -1,4 +1,5 @@
-<p-progressbar *ngIf="loading" mode="indeterminate" [style]="{ height: '6px' }" />
+<p-progress-bar *ngIf="loading" mode="indeterminate" [style]="{ height: '6px' }" />
+
 <div class="card">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
         <h5 class="m-0">{{ isEditMode ? 'Edit Invoice' : 'Create Invoice' }}</h5>
@@ -15,9 +16,15 @@
         <div class="flex flex-col gap-6 w-full">
 
             <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                <div class="flex gap-2">
-                    <p>Invoice #</p>
-                    <p>{{invoiceForm.get('invoice_number')?.value}}</p>
+
+
+                <div class="flex items-center">
+                    <label for="company_id" class="mr-2">Company:</label>
+                    <p-auto-complete [required]="true" formControlName="company" inputId="id" [dropdown]="true"
+                                    [suggestions]="filteredComponies ?? []" (completeMethod)="filterCompany($event)"
+                                     optionLabel="name"
+                                    class="w-full" (onSelect)="companySelect($event)"></p-auto-complete>
+
                 </div>
 
                 <div>
@@ -29,14 +36,6 @@
                 </div>
             </div>
 
-            <div>
-                <label for="company_id" class="mr-2">Company:</label>
-                <p-autocomplete formControlName="company" inputId="id" [dropdown]="true"
-                    [suggestions]="filteredComponies ?? []" (completeMethod)="filterCompany($event)" field="name"
-                    class="w-full" (onSelect)="companySelect($event)" />
-                <small *ngIf="invoiceForm.get('company')?.invalid && invoiceForm.get('company')?.touched"
-                    class="p-error">Required</small>
-            </div>
 
             <div class="flex flex-col md:flex-row gap-2">
                 <p>Company Address: </p>
@@ -51,102 +50,65 @@
             </div>
 
 
+            <div *ngFor="let group of invoiceForm.get('groups')['controls']; let i = index" class="border p-4 rounded">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex gap-3 items-center">
+                        <h6 class="m-0">Sr No. {{ i + 1 }}</h6>
+                        <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteGroup(i)" [disabled]="loading" [outlined]="true" />
+                    </div>
 
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-arrow-up" [rounded]="true" severity="info" [text]="true"
+                                  (onClick)="moveGroupUp(i)" [disabled]="loading || i === 0"/>
+                        <p-button icon="pi pi-arrow-down" [rounded]="true" severity="info" [text]="true"
+                                  (onClick)="moveGroupDown(i)"
+                                  [disabled]="loading || i === invoiceForm.get('groups')['controls'].length - 1"/>
+                    </div>
 
-        </div>
-
-
-        <p-table [value]="invoiceItemsList" dataKey="id" [tableStyle]="{ 'min-width': '50rem' }"
-            [loading]="loading"
-        >
-
-            <ng-template #caption>
-                <div class="flex items-center justify-between">
-                    <span class="text-xl font-bold">Invoice Items</span>
-                    <p-button icon="pi pi-plus" rounded raised (onClick)="addInvoiceItem()" />
                 </div>
-            </ng-template>
-            <ng-template #header>
-                <tr>
-                    <th style="min-width: 4rem; width: 5%;">Sr.</th>
-                    <th style="min-width: 18rem; width: 30%;">Description</th>
-                    <th style="min-width: 10rem; width: 15%;">Service Name</th>
-                    <th style="min-width: 8rem; width: 15%;">QTY</th>
-                    <th style="min-width: 8rem; width: 15%;">Rate</th>
-                    <th style="min-width: 8rem; width: 15%;">Amount</th>
-                    <th style="min-width: 8rem; width: 15%;">Vat Amount</th>
-                    <th style="min-width: 12rem; width: 20%;">Total Amount</th>
-                    <th style="min-width: 8rem; "></th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-item let-index>
-                <tr>
-                    <td>
-                        {{ item.sr_no_group }}
-                    </td>
-                    <td>
-                        {{ item.description }}
-                    </td>
-                    <td>
-                        {{ item.service.name }}
-                    </td>
-                    <td>
-                        {{ item.quantity }}
-                    </td>
-                    <td>
-                        {{ item.rate }}
-                    </td>
-                    <td>
-                        {{ item.amount }}
-                    </td>
-                    <td>
-                        {{ item.vat_amount }}
-                    </td>
-                    <td>
-                        {{ item.total_amount }}
-                    </td>
-                    <td>
-                        <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
-                            (onClick)="editInvoiceItem(item)" />
-                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
-                            (onClick)="deleteInvoiceItem(item)" />
-                    </td>
-                </tr>
-            </ng-template>
-        </p-table>
+
+                <app-invoice-item [group]="group" (calculateTotal)="calculateTotal()"></app-invoice-item>
 
 
-        <div class="flex flex-col gap-4 mt-10 w-full md:w-1/2 ml-auto">
-            <div class="flex flex-row justify-between items-center">
-                <span class="font-semibold">Gross Amount:</span>
-                <span>{{ invoiceForm.get('gross_amount')?.value | number:'1.2-2' }}</span>
             </div>
-            <div class="flex flex-row justify-between items-center">
-                <span class="font-semibold">VAT Amount:</span>
-                <span>{{ invoiceForm.get('vat_amount')?.value | number:'1.2-2' }}</span>
+
+<!--            Add Group Button-->
+            <div class="w-full flex justify-end mt-1">
+                <p-button label="Add Group" icon="pi pi-plus" class="" (onClick)="addGroup()" [disabled]="loading"/>
             </div>
-            <div class="flex flex-row justify-between items-center">
-                <span class="font-semibold">Total Amount:</span>
-                <span>{{ invoiceForm.get('total_amount')?.value | number:'1.2-2' }}</span>
-            </div>
+
         </div>
-
 
     </form>
 
+    <div class="flex flex-col gap-4 mt-10 w-full md:w-1/2 ml-auto">
+        <div class="flex flex-row justify-between items-center">
+            <span class="font-semibold">Gross Amount:</span>
+            <span>{{ invoiceForm.get('gross_amount')?.value | number:'1.3-3' }}</span>
+        </div>
+        <div class="flex flex-row justify-between items-center">
+            <span class="font-semibold">VAT Amount:</span>
+            <span>{{ invoiceForm.get('vat_amount')?.value | number:'1.3-3' }}</span>
+        </div>
+        <div class="flex flex-row justify-between items-center">
+            <span class="font-semibold">Total Amount:</span>
+            <span>{{ invoiceForm.get('total_amount')?.value | number:'1.3-3' }}</span>
+        </div>
+    </div>
+
     <div class="flex flex-col md:flex-row justify-end gap-2 mt-4">
         <p-button label="Cancel" icon="pi pi-times" severity="secondary" (onClick)="cancel()" />
-        <p-button label="Save" icon="pi pi-check" type="submit" [disabled]="invoiceForm.invalid" (onClick)="onSubmit()" />
+        <p-button label="Save" icon="pi pi-check" type="submit"  (onClick)="onSubmit()">
+            <ng-template pTemplate="icon">
+                <i *ngIf="loading" class="pi pi-spin pi-spinner"></i>
+                <i *ngIf="!loading" class="pi pi-check"></i>
+            </ng-template>
+        </p-button>
     </div>
 
 </div>
 
-
-
-
 <p-toast />
 
-<app-add-edit-invoice-item [visible]="invoiceItemDialogueVisible" [invoiceItem]="selectedInvoiceItem"
-    (close)="hideDialog()" (save)="saveInvoiceItem($event)"></app-add-edit-invoice-item>
+<p-confirm-dialog/>
 
-    <p-confirmdialog [style]="{ width: '450px' }" />

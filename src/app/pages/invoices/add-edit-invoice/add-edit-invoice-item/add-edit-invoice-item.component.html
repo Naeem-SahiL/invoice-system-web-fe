@@ -7,18 +7,18 @@
 >
 <form [formGroup]="form" class="flex flex-col gap-6 w-full">
 
-    <p-floatlabel variant="in" class="flex-1">
-        <p-inputNumber inputId="rate" formControlName="sr_no_group" [min]="1"  fluid showButtons="true"
-            class="w-full" />
-        <label for="rate">Sr. No Group *</label>
-        <p-message *ngIf="form.get('sr_no_group')?.invalid && form.get('sr_no_group')?.touched" severity="error" variant="simple"
-            size="small">
-            Sr. No Group must be a positive number
-        </p-message>
-    </p-floatlabel>
+<!--    <p-floatlabel variant="in" class="flex-1">-->
+<!--        <p-inputNumber inputId="rate" formControlName="sr_no_group" [min]="1"  fluid showButtons="true"-->
+<!--            class="w-full" />-->
+<!--        <label for="rate">Sr. No Group *</label>-->
+<!--        <p-message *ngIf="form.get('sr_no_group')?.invalid && form.get('sr_no_group')?.touched" severity="error" variant="simple"-->
+<!--            size="small">-->
+<!--            Sr. No Group must be a positive number-->
+<!--        </p-message>-->
+<!--    </p-floatlabel>-->
 
     <div class="flex items-center gap-2 w-full">
-         <p-dropdown inputId="service_type_id" [(ngModel)]="serviceType" variant="filled" optionLabel="value" showClear="true"
+         <p-select inputId="service_type_id" [(ngModel)]="serviceType" variant="filled" optionLabel="value" showClear="true"
                 [options]="serviceTypes" placeholder="Service Type" (onChange)="onServiceTypeChange($event.value)" [ngModelOptions]="{standalone: true}" />
 
         <p-select #serviceSelect formControlName="service" [options]="services" placeholder="Select a Service" [editable]="true" optionLabel="name"
@@ -26,6 +26,7 @@
 
         <button pButton type="button" icon="pi pi-refresh" class="p-button-text" (click)="loadServices()" aria-label="Refresh services"></button>
     </div>
+
 
     <p-floatlabel variant="in">
       <textarea pTextarea id="description" formControlName="description" rows="4" style="resize: none" class="h-full" fluid></textarea>
@@ -49,7 +50,9 @@
         </p-floatlabel>
 
         <p-floatlabel variant="in" class="flex-1">
-            <p-inputNumber inputId="rate" formControlName="rate" mode="decimal" [min]="0" [showButtons]="true" fluid class="w-full" />
+            <p-inputNumber inputId="rate" formControlName="rate"  [min]="0" [showButtons]="true"  mode="decimal"
+                           [step]="0.001"
+                           [minFractionDigits]="3" fluid class="w-full" />
             <label for="rate">Rate *</label>
             <p-message *ngIf="form.get('rate')?.invalid && form.get('rate')?.touched" severity="error" variant="simple"
                 size="small">
@@ -60,7 +63,8 @@
 
 
     <p-floatlabel variant="in">
-      <p-inputNumber inputId="amount" formControlName="amount" mode="decimal" [min]="0" [showButtons]="true"  fluid/>
+      <p-inputNumber inputId="amount" formControlName="amount" mode="decimal"  [step]="0.001"
+                     [minFractionDigits]="3" [min]="0" [showButtons]="true"  fluid/>
       <label for="amount">Amount *</label>
       <p-message *ngIf="form.get('amount')?.invalid && form.get('amount')?.touched" severity="error" variant="simple" size="small">
         Amount must be a non-negative number
@@ -69,7 +73,8 @@
 
     <!-- vat_amount -->
     <p-floatlabel variant="in">
-      <p-inputNumber inputId="vat_amount" formControlName="vat_amount" mode="decimal" [min]="0" [showButtons]="true"  fluid/>
+      <p-inputNumber inputId="vat_amount" formControlName="vat_amount" mode="decimal"  [step]="0.001"
+                     [minFractionDigits]="3" [min]="0" [showButtons]="true"  fluid/>
       <label for="vat_amount">{{form.get('service')?.value ? 'VAT Amount ('+form.get('service')?.value?.vat_percentage+'%) *' : 'VAT Amount *'}}</label>
       <p-message *ngIf="form.get('vat_amount')?.invalid && form.get('vat_amount')?.touched" severity="error" variant="simple" size="small">
         VAT Amount must be a non-negative number
@@ -78,7 +83,8 @@
 
     <!-- total_amount -->
     <p-floatlabel variant="in">
-      <p-inputNumber readonly="true" [variant]="'filled'" inputId="total_amount" formControlName="total_amount" mode="decimal" [min]="0" [showButtons]="false"  fluid/>
+      <p-inputNumber readonly="true" [variant]="'filled'" inputId="total_amount" formControlName="total_amount"  [step]="0.001"
+                     [minFractionDigits]="3" mode="decimal" [min]="0" [showButtons]="false"  fluid/>
       <label for="total_amount">Total Amount *</label>
       <p-message *ngIf="form.get('total_amount')?.invalid && form.get('total_amount')?.touched" severity="error" variant="simple" size="small">
         Total Amount must be a non-negative number

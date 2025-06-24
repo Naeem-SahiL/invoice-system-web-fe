@@ -6,18 +6,24 @@
     </ng-template>
 
     <ng-template #end>
-        <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadInvoices()" />
+        <p-button label="Reload" icon="pi pi-refresh" severity="secondary" (onClick)="loadInvoices(state)" />
     </ng-template>
 </p-toolbar>
 
-<p-table #dt [value]="invoices()" [rows]="10" [paginator]="true"
-    [loading]="loading"
-    [globalFilterFields]="['invoice_number', 'company.name', 'invoice_date']"
-    [(selection)]="selectedInvoices" [rowHover]="true" dataKey="id"
-    [tableStyle]="{ 'min-width': '75rem' }"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
-    [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="[10, 20, 30]">
+<p-table #dt [value]="invoices()"
+            [lazy]="true"
+         [rows]="state.rows" [paginator]="true"
+         [totalRecords]="state.totalRecords"
+         [first]="state.first"
+         (onLazyLoad)="loadInvoices($event)"
+         [loading]="loading"
+
+         [globalFilterFields]="['invoice_number', 'company.name', 'invoice_date']"
+         [(selection)]="selectedInvoices" [rowHover]="true" dataKey="id"
+         [tableStyle]="{ 'min-width': '75rem' }"
+         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} invoices"
+         [showCurrentPageReport]="true"
+         [rowsPerPageOptions]="[10, 20, 30]">
 
     <ng-template #caption>
         <div class="flex items-center justify-between">
@@ -72,5 +78,5 @@
 <!-- <app-add-edit-invoice [visible]="invoiceDialog" [invoice]="invoice"
     (close)="hideDialog()" (save)="saveInvoice($event)"></app-add-edit-invoice> -->
 
-<p-confirmdialog [style]="{ width: '450px' }" />
+<p-confirm-dialog [style]="{ width: '450px' }" />
 <p-toast />

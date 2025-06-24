@@ -49,13 +49,14 @@ export class AddEditCompanyComponent {
 
   buildForm() {
     // create the form with validation
-    this.form = this.fb.group({
-      id: [this.company?.id || null],
-      name: [this.company?.name || '', Validators.required],
-      address: [this.company?.address || '', Validators.required],
-      phone: [this.company?.phone || '', Validators.pattern(/^\+?[0-9]*$/)],
-      email: [this.company?.email || '', [Validators.required, Validators.email]],
-    });
+      this.form = this.fb.group({
+          id: [this.company?.id || null],
+          name: [this.company?.name || '', Validators.required],
+          address: [this.company?.address || '', Validators.required],
+          phone: [this.company?.phone || '', Validators.pattern(/^\+?[0-9]*$/)],
+          email: [this.company?.email || '', [Validators.required, Validators.email]],
+          vat_no: [this.company?.vat_no || '', [Validators.required]],
+      });
   }
 
   onSave() {
