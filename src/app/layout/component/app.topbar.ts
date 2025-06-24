@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '../service/layout.service';
+import { AuthService } from '../../pages/auth/auth.service';
 
 @Component({
     selector: 'app-topbar',
@@ -78,13 +79,32 @@ import { LayoutService } from '../service/layout.service';
                     </button>
                 </div>
             </div> -->
+
+            <div class="ml-4">
+                <ng-container *ngIf="auth.isLoggedIn(); else guest">
+                    <button class="layout-topbar-action" (click)="logout()">
+                    <i class="pi pi-sign-out"></i>
+                    <span class="hidden md:inline ml-2">Logout</span>
+                    </button>
+                </ng-container>
+                <ng-template #guest>
+                    <button class="layout-topbar-action" (click)="login()">
+                    <i class="pi pi-sign-in"></i>
+                    <span class="hidden md:inline ml-2">Login</span>
+                    </button>
+                </ng-template>
+                </div>
         </div>
     </div>`
 })
 export class AppTopbar {
     items!: MenuItem[];
 
-    constructor(public layoutService: LayoutService) {}
+    constructor(
+        public layoutService: LayoutService,
+        public auth: AuthService,
+        private router: Router
+    ) {}
 
     toggleDarkMode() {
         this.layoutService.layoutConfig.update((state) => {
@@ -92,5 +112,13 @@ export class AppTopbar {
             localStorage.setItem('darkTheme', String(newDarkTheme));
             return { ...state, darkTheme: newDarkTheme };
         });
+    }
+
+    logout() {
+        this.auth.logout();
+    }
+
+    login() {
+        this.router.navigate(['/auth/login']);
     }
 }
