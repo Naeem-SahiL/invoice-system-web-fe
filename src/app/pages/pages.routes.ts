@@ -17,11 +17,19 @@ import { UsersComponent } from './users/users.component';
 import { UserFormComponent } from './users/user.form/user.form.component';
 import { RolesComponent } from './roles/roles.component';
 import { RoleFormComponent } from './roles/role.form/role.form.component';
+import { AuthGuard } from './auth/auth.guard';
+import { PermissionGuard } from './auth/permission.guard';
+import { Companies } from '../shared/Permissions';
 
 export default [
     { path: 'documentation', component: Documentation },
     { path: 'crud', component: Crud },
-    { path: 'companies', component: CompaniesComponent },
+    {
+        path: 'companies',
+        component: CompaniesComponent,
+        canActivate: [AuthGuard, PermissionGuard],
+        data: { permission: Companies.VIEW }
+    },
     { path: 'services', component: ServicesComponent },
     {
         path: 'invoices',

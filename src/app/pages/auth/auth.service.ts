@@ -3,10 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { StaticAppConfig } from '../service/config.service';
 import { catchError, Observable, of, switchMap } from 'rxjs';
+import { jwtDecode as jwt_decode } from 'jwt-decode';
+import { Constants } from '../../shared/constants';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private tokenKey = 'auth_token';
+    private tokenKey = Constants.AUTH_TOKEN;
+    private userKey = Constants.AUTH_USER;
     private apiBaseUrl = StaticAppConfig.get('apiBaseUrl')
 
     constructor(private http: HttpClient, private router: Router) { }
@@ -17,6 +20,8 @@ export class AuthService {
 
     saveToken(token: string): void {
         localStorage.setItem(this.tokenKey, token);
+        const decoded = jwt_decode(token);
+        localStorage.setItem(this.userKey, JSON.stringify(decoded));
     }
 
     getToken(): string | null {

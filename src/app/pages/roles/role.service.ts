@@ -32,4 +32,8 @@ export class RoleService {
     getAllModules() {
         return this.http.get<any>(this.apiUrl + '/modules');
     }
+
+    deleteRole(id) {
+        return this.http.delete(`${this.apiUrl}/roles/${id}`);
+    }
 }

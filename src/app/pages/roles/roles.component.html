@@ -15,7 +15,7 @@
 
 <p-table #dt
          [value]="roles"
-         [(selection)]="selectedRoles"
+
          dataKey="id"
             [loading]="roleLoading"
          [paginator]="true"
@@ -38,34 +38,33 @@
     <ng-template pTemplate="header">
         <tr>
             <th style="width: 3rem">
-                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                #
             </th>
             <th>Role Name</th>
-            <th>Active</th>
+            <th>Description</th>
             <th>Actions</th>
         </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-role>
+    <ng-template pTemplate="body" let-role let-index="rowIndex">
         <tr>
             <td>
-                <p-tableCheckbox [value]="role"></p-tableCheckbox>
+                {{ index + 1 }}
             </td>
             <td>{{ role.name }}</td>
-            <td>
-                <span [ngClass]="role.isActive ? 'text-green-500' : 'text-red-500'">
-                    {{ role.isActive ? 'Active' : 'Inactive' }}
-                </span>
-            </td>
+            <td>{{ role.description || '---' }}</td>
+
             <td>
                 <p-button icon="pi pi-pencil" outlined class="mr-2"
-                          (onClick)="editUser(role)"></p-button>
+                          (onClick)="editRole(role)"></p-button>
                 <p-button icon="pi pi-trash" severity="danger" outlined  class="mr-2"
-                          (onClick)="deleteUser(role)"></p-button>
+                          (onClick)="deleteRole(role)" [loading]="deleting == role.id" ></p-button>
             </td>
         </tr>
     </ng-template>
 </p-table>
+
+<p-confirm-dialog [style]="{ width: '450px' }"></p-confirm-dialog>
 
 
 

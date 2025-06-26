@@ -21,6 +21,7 @@
         "@angular/router": "^19.0.0",
         "@primeng/themes": "^19.0.5",
         "chart.js": "4.4.2",
+        "jwt-decode": "^4.0.0",
         "ngx-print": "^3.0.0",
         "number-to-words": "^1.2.4",
         "pdfmake": "^0.1.68",

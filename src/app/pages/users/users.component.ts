@@ -12,12 +12,14 @@ import { NgClass, NgForOf, NgIf } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChangePasswordComponent } from './change-password/change-password.component';
 import { Dialog } from 'primeng/dialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
     selector: 'app-users',
     imports: [Button, IconField, InputIcon, InputText, TableModule, Toolbar, NgClass, NgForOf, NgIf, ChangePasswordComponent, Dialog],
     templateUrl: './users.component.html',
-    styleUrl: './users.component.scss'
+    styleUrl: './users.component.scss',
+    providers: [ConfirmationService]
 })
 export class UsersComponent {
     users: User[] = [];
@@ -30,6 +32,7 @@ export class UsersComponent {
     constructor(
         private userService: UserService,
         private globalMessageService: GlobalMessageService,
+        private confirmationService: ConfirmationService,
         private router: Router
     ) {}
 
@@ -67,7 +70,43 @@ export class UsersComponent {
         this.router.navigate(['/pages/users/edit', user.id]);
     }
 
-    deleteUser(user: any) {}
+    deleteUser(user: any) {
+        this.confirmationService.confirm({
+            message: `Are you sure you want to delete user ${user.name}?`,
+            header: 'Confirm Deletion',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.performDelete(user);
+            },
+            reject: () => {
+                this.globalMessageService.showMessage({
+                    severity: 'info',
+                    summary: 'Cancelled',
+                    detail: 'User deletion cancelled.'
+                });
+            }
+        })
+    }
+
+    performDelete(user: any) {
+        this.userService.deleteUser(user.id).subscribe({
+            next: () => {
+                this.globalMessageService.showMessage({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: `User ${user.name} deleted successfully.`
+                });
+                this.loadUsers(); // Refresh the user list
+            },
+            error: (err) => {
+                this.globalMessageService.showMessage({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: err.message || 'An error occurred while deleting the user.'
+                });
+            }
+        });
+    }
 
     openPasswordDialog(userId: number) {
         this.selectedUserId = userId;

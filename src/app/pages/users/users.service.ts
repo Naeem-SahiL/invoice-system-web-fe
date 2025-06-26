@@ -27,4 +27,8 @@ export class UserService {
     updatePassword(selectedUserId: number, data: any) {
         return this.http.put(`${this.apiUrl}/users/${selectedUserId}/update-password`, data);
     }
+
+    deleteUser(id) {
+        return this.http.delete(`${this.apiUrl}/users/${id}`);
+    }
 }
