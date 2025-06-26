@@ -1,12 +1,9 @@
 import { Component } from '@angular/core';
-import { AddEditCompanyComponent } from '../companies/add-edit-company/add-edit-company.component';
 import { Button } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
-import { Toast } from 'primeng/toast';
 import { Toolbar } from 'primeng/toolbar';
 import { User } from './user.model';
 import { UserService } from './users.service';
@@ -18,7 +15,7 @@ import { Dialog } from 'primeng/dialog';
 
 @Component({
     selector: 'app-users',
-    imports: [AddEditCompanyComponent, Button, ConfirmDialog, IconField, InputIcon, InputText, TableModule, Toast, Toolbar, NgClass, NgForOf, NgIf, ChangePasswordComponent, Dialog],
+    imports: [Button, IconField, InputIcon, InputText, TableModule, Toolbar, NgClass, NgForOf, NgIf, ChangePasswordComponent, Dialog],
     templateUrl: './users.component.html',
     styleUrl: './users.component.scss'
 })

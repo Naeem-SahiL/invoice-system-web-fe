@@ -15,6 +15,8 @@ import { VatReportComponent } from './vat-report/vat-report.component';
 import { OutstandingInvoicesComponent } from './outstanding-invoices/outstanding-invoices.component';
 import { UsersComponent } from './users/users.component';
 import { UserFormComponent } from './users/user.form/user.form.component';
+import { RolesComponent } from './roles/roles.component';
+import { RoleFormComponent } from './roles/role.form/role.form.component';
 
 export default [
     { path: 'documentation', component: Documentation },
@@ -73,6 +75,27 @@ export default [
             {
                 path: 'new',
                 component: UserFormComponent
+            }
+        ]
+    },
+    {
+        path: 'roles',
+        children: [
+            {
+                path: '',
+                component: RolesComponent
+            },
+            {
+                'path': 'edit/:id',
+                component: RoleFormComponent
+            },
+            {
+                'path': 'view/:id',
+                component: RoleFormComponent
+            },
+            {
+                path: 'new',
+                component: RoleFormComponent
             }
         ]
     },
