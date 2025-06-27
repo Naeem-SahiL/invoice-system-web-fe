@@ -21,6 +21,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Product, ProductService } from '../service/product.service';
 import { CompaniesService, Company } from '../service/companies.service';
 import { AddEditCompanyComponent } from './add-edit-company/add-edit-company.component';
+import { HasPermissionDirective } from '../../shared/has.permission.directive';
+import { Companies } from '../../shared/Permissions';
 
 interface Column {
     field: string;
@@ -54,7 +56,8 @@ interface ExportColumn {
         InputIconModule,
         IconFieldModule,
         ConfirmDialogModule,
-        AddEditCompanyComponent
+        AddEditCompanyComponent,
+        HasPermissionDirective
     ],
     standalone: true,
     templateUrl: './companies.component.html',
@@ -65,6 +68,7 @@ export class CompaniesComponent {
     companyDialog: boolean = false;
     loading = true;
     error = false;
+    protected readonly Companies = Companies;
 
     companies = signal<Company[]>([{}]);
 
@@ -287,4 +291,6 @@ export class CompaniesComponent {
             this.company = {};
         }
     }
+
+
 }

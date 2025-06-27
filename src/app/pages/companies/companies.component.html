@@ -1,6 +1,6 @@
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
-        <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button *hasPermission="Companies.CREATE" label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
         <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedCompanies()"
             [disabled]="!selectedCompanies || !selectedCompanies.length" />
     </ng-template>
@@ -76,9 +76,9 @@
             </td>
 
             <td>
-                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                <p-button *hasPermission="Companies.UPDATE" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
                     (click)="editCompany(company)" />
-                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                <p-button *hasPermission="Companies.DELETE" icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
                     (click)="deleteCompany(company)" />
             </td>
         </tr>

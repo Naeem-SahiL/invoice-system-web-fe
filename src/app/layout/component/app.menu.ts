@@ -63,6 +63,10 @@ export class AppMenu {
             {
                 label: 'Users',
                 items: [{ label: 'Users List', icon: 'pi pi-fw pi-users', routerLink: ['/pages/users'] }]
+            },
+            {
+                label: 'Security',
+                items: [{ label: 'Roles List', icon: 'pi pi-fw pi-shield', routerLink: ['/pages/roles'] }]
             }
             // {
             //     label: 'Settings',

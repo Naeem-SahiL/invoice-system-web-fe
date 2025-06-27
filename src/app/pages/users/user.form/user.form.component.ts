@@ -5,17 +5,15 @@ import { UserService } from '../users.service';
 import { RoleService } from '../../roles/role.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { User } from '../user.model';
-import { InputText } from 'primeng/inputtext';
 import { MultiSelect } from 'primeng/multiselect';
-import { Checkbox } from 'primeng/checkbox';
-import { Button, ButtonDirective, ButtonLabel } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { NgIf } from '@angular/common';
 import { GlobalMessageService } from '../../service/global-message.service';
 import { Toolbar } from 'primeng/toolbar';
 
 @Component({
     selector: 'app-user.form',
-    imports: [ReactiveFormsModule, InputText, MultiSelect, Checkbox, ButtonDirective, Button, ButtonLabel, NgIf, Toolbar],
+    imports: [ReactiveFormsModule, MultiSelect, Button, NgIf, Toolbar],
     templateUrl: './user.form.component.html',
     styleUrl: './user.form.component.scss'
 })

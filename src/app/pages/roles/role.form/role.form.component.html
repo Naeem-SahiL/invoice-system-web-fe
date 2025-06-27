@@ -1,0 +1,81 @@
+<div class=" shadow-md rounded-lg p-6 max-w-3xl mx-auto">
+    <h2 class="text-2xl font-semibold mb-6">
+        {{ isEditMode ? 'Edit Role' : 'Create Role' }}
+    </h2>
+
+    <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Role Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium mb-1">Role Name</label>
+                <input id="name" type="text" pInputText formControlName="name" class="w-full"/>
+                <div *ngIf="roleForm.get('name')?.invalid && roleForm.get('name')?.touched"
+                     class="text-red-500 text-xs mt-1">
+                    Role name is required.
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium mb-1">Description</label>
+                <input id="description" type="text" pInputText formControlName="description" class="w-full"/>
+            </div>
+
+            <!-- Is Active -->
+<!--            <div class="flex items-center gap-2">-->
+<!--                <p-checkbox inputId="isActive" formControlName="isActive" binary="true"></p-checkbox>-->
+<!--                <label for="isActive" class="text-sm">Active</label>-->
+<!--            </div>-->
+
+            <!-- Permissions via Table -->
+            <div class="md:col-span-2 mt-4">
+                <label class="block text-sm font-medium mb-2">Permissions</label>
+
+                <p-table [value]="modulesWithPermissions" [responsiveLayout]="'scroll'"
+                         [loading]="loadingPermissions"
+                         class="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Module</th>
+                            <th *ngFor="let perm of permissionTypes" class="text-center capitalize">
+                                {{ perm }}
+                            </th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-module>
+                        <tr>
+                            <td class="font-semibold">
+                                <p-checkbox
+                                    [binary]="true"
+                                    [(ngModel)]="module.allSelected"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (onChange)="toggleModulePermissions(module)"
+                                ></p-checkbox>
+                                <span class="ml-2 capitalize">{{ module.name }}</span>
+                            </td>
+
+                            <td *ngFor="let perm of permissionTypes" class="text-center">
+                                <p-checkbox
+                                    [binary]="true"
+                                    [(ngModel)]="module.permissionMap[perm]"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (onChange)="onPermissionChange(module)"
+                                ></p-checkbox>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+
+        </div>
+
+
+        <!-- Actions -->
+        <div class="mt-6 flex gap-3 justify-end">
+            <p-button label="Cancel" class="p-button-secondary" (click)="router.navigate(['/pages/roles'])"></p-button>
+            <p-button type="submit" label="Save" [disabled]="roleForm.invalid" [loading]="saving"></p-button>
+        </div>
+    </form>
+</div>

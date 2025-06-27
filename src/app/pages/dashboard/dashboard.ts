@@ -5,10 +5,12 @@ import { RecentSalesWidget } from './components/recentsaleswidget';
 import { BestSellingWidget } from './components/bestsellingwidget';
 import { RevenueStreamWidget } from './components/revenuestreamwidget';
 import { TagModule } from 'primeng/tag';
+import { PermissionService } from '../service/permission.service';
+import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [TagModule],
+    imports: [TagModule, NgIf],
     template: `
         <!-- <div class="grid grid-cols-12 gap-8"> -->
         <!-- <app-stats-widget class="contents" />
@@ -23,6 +25,7 @@ import { TagModule } from 'primeng/tag';
         <div class="flex flex-col items-center justify-center h-[70vh] text-center p-6 gap-4 border border-dashed border-surface-300 rounded-lg shadow-sm">
             <i class="pi pi-cog pi-spin text-4xl text-primary-500"></i>
             <h2 class="text-2xl font-semibold text-surface-700">Site Under Development</h2>
+            <h3 *ngIf="permissionService.has('companies.update')">User has Permission</h3>
             <p class="text-surface-500 max-w-xl">We’re working hard to bring you an awesome experience. This section is currently under construction. Check back soon!</p>
             <p-tag value="In Progress" severity="warning" rounded></p-tag>
         </div>
@@ -30,4 +33,6 @@ import { TagModule } from 'primeng/tag';
         <!-- </div> -->
     `
 })
-export class Dashboard {}
+export class Dashboard {
+    constructor(public permissionService: PermissionService) {}
+}

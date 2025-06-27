@@ -31,6 +31,8 @@ import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { IftaLabel } from 'primeng/iftalabel';
 import { Select } from 'primeng/select';
+import { HasPermissionDirective } from '../../shared/has.permission.directive';
+import { CompanyPayments } from '../../shared/Permissions';
 
 @Component({
     selector: 'app-company-payments',
@@ -66,7 +68,8 @@ import { Select } from 'primeng/select';
         AddPaymentComponent,
         ConfirmDialog,
         IftaLabel,
-        Select
+        Select,
+        HasPermissionDirective
     ],
     templateUrl: './company-payments.component.html',
     styleUrl: './company-payments.component.scss',
@@ -277,7 +280,6 @@ export class CompanyPaymentsComponent implements OnInit {
         this.editingRowId = null;
         // Restore original data
         Object.assign(payment, this.editingRowOriginal);
-
     }
 
     savePayment(payment: any) {
@@ -445,10 +447,7 @@ export class CompanyPaymentsComponent implements OnInit {
                 this.showSuccess('Payments saved successfully');
                 // reset payment details
                 this.onCardClose();
-                setTimeout(
-                    () => this.loadPayments(this.lastTableEvent),
-                    500
-                );
+                setTimeout(() => this.loadPayments(this.lastTableEvent), 500);
             },
             error: (err) => this.showError(`Failed to save payments: ${err.error?.message || 'Unknown error'}`),
             complete: () => {
@@ -488,4 +487,6 @@ export class CompanyPaymentsComponent implements OnInit {
         this.uploadedFiles = [];
         this.selectedInvoices = [];
     }
+
+    protected readonly CompanyPayments = CompanyPayments;
 }

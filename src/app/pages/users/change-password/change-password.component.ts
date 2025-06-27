@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { NgIf } from '@angular/common';
 import { Button } from 'primeng/button';
@@ -8,7 +7,7 @@ import { Button } from 'primeng/button';
 @Component({
     selector: 'app-change-password',
     templateUrl: './change-password.component.html',
-    imports: [Dialog, PrimeTemplate, ReactiveFormsModule, NgIf, Button]
+    imports: [PrimeTemplate, ReactiveFormsModule, NgIf, Button]
 })
 export class ChangePasswordComponent {
     @Input() visible = false;

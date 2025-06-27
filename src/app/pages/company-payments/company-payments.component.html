@@ -57,8 +57,8 @@
 <!--Add payment card-->
 <div class="flex-col pb-2">
 
-    <div class="w-full flex justify-end pb-2">
-    <p-button label="Add Payment" [icon]="'pi pi-plus'" (onClick)="openAddPaymentCard()"></p-button>
+    <div class="w-full flex justify-end pb-2" *hasPermission="CompanyPayments.CREATE">
+        <p-button label="Add Payment" [icon]="'pi pi-plus'" (onClick)="openAddPaymentCard()"></p-button>
     </div>
 
     <p-card *ngIf="showAddPaymentCard" class="rounded-sm shadow-none" [styleClass]="'shadow-none'"  @accordionToggle>
@@ -264,12 +264,13 @@
                 </ng-container>
                 <ng-template #actionButtons>
                     <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
-                              (onClick)="editRow(payment)" />
+                              (onClick)="editRow(payment)" *hasPermission="CompanyPayments.UPDATE"/>
                     <p-button icon="pi pi-trash"
                               severity="danger"
                               [rounded]="true"
                               [outlined]="true"
                               (onClick)="deletePayment(payment)"
+                              *hasPermission="CompanyPayments.DELETE"
                               [loading]="deletingRowId === payment.id && deleting" />
                 </ng-template>
             </td>
