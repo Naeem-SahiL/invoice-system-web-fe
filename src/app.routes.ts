@@ -5,7 +5,6 @@ import { Documentation } from './app/pages/documentation/documentation';
 import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
 import { AuthGuard } from './app/pages/auth/auth.guard';
-import { PermissionGuard } from './app/pages/auth/permission.guard';
 
 export const appRoutes: Routes = [
     {
