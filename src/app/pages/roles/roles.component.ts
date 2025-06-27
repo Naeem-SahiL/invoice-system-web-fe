@@ -1,4 +1,3 @@
-import { NgClass } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Button } from 'primeng/button';
 import { IconField } from 'primeng/iconfield';
@@ -15,7 +14,7 @@ import { ConfirmationService } from 'primeng/api';
 
 @Component({
     selector: 'app-roles',
-    imports: [Button, IconField, InputIcon, InputText, TableModule, Toolbar, NgClass, ConfirmDialog],
+    imports: [Button, IconField, InputIcon, InputText, TableModule, Toolbar, ConfirmDialog],
     providers: [ConfirmationService],
     templateUrl: './roles.component.html',
     styleUrl: './roles.component.scss'
