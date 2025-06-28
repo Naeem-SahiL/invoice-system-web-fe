@@ -138,6 +138,9 @@ export class VatReportComponent {
     get totalVatAmount(): number {
         return this.vatInvoices?.reduce((sum, inv) => sum + parseFloat(inv.vat_amount || '0'), 0) ?? 0;
     }
+    get totalAmtAmount(): number {
+        return this.vatInvoices?.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0) ?? 0;
+    }
 
     private showError(detail: string) {
         this.globalMsgService.showMessage({

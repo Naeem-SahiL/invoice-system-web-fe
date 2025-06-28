@@ -12,8 +12,8 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
-import {DatePipe, DecimalPipe, formatDate, NgClass, NgForOf, NgIf} from '@angular/common';
-import { debounceTime, Subject } from 'rxjs';
+import {DatePipe, DecimalPipe, formatDate, NgClass, NgFor, NgForOf, NgIf} from '@angular/common';
+import {debounceTime, from, groupBy, mergeMap, of, reduce, Subject} from 'rxjs';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
 import { Ripple } from 'primeng/ripple';
@@ -42,6 +42,7 @@ import { CompanyPayments } from '../../shared/Permissions';
         FormsModule,
         NgForOf,
         NgIf,
+        NgFor,
         ReactiveFormsModule,
 
         // PrimeNG modules
@@ -141,12 +142,14 @@ export class CompanyPaymentsComponent implements OnInit {
         globalFilter: ''
     };
     lastTableEvent = this.state;
+    expandedRows = {};
 
     companyOptions = [];
     selectedCompanyId: number;
     selectedPaymentMethod: any;
     filteredCompanies: Company[] | undefined;
     payments = [];
+    groupedPayments = [];
     paymentMethods = [];
 
     loading = false;
@@ -165,7 +168,7 @@ export class CompanyPaymentsComponent implements OnInit {
     remarks: string = '';
     uploadedFiles: File[] = [];
     paymentDate: any = new Date();
-    referenceNumber: string = '';
+    chequeNumber: string = '';
 
     savingPayment = false;
     private editingRowOriginal: any;
@@ -193,6 +196,16 @@ export class CompanyPaymentsComponent implements OnInit {
     ngOnInit() {
         this.loadCompanies();
         this.loadPaymentMethods();
+    }
+
+    onRowExpand(event) {
+        // this.expandedRows[key] = true;
+        console.log(event);
+    }
+
+    onRowCollapse(event) {
+        // delete this.expandedRows[key];
+        console.log(event);
     }
 
     filterCompany(event: AutoCompleteCompleteEvent) {
@@ -257,6 +270,7 @@ export class CompanyPaymentsComponent implements OnInit {
             next: (payments) => {
                 this.payments = payments.data;
                 this.state.totalRecords = payments.meta?.total;
+                this.getGroupedPayments(this.payments);
             },
             error: () => {
                 this.showError('Failed to load payments');
@@ -282,12 +296,13 @@ export class CompanyPaymentsComponent implements OnInit {
         Object.assign(payment, this.editingRowOriginal);
     }
 
-    savePayment(payment: any) {
+    savePayment(payment: any, groupId) {
         this.saving = true;
         this.paymentService.updatePayment(payment).subscribe({
             next: () => {
                 this.saving = false;
                 this.editingRowId = null;
+                this.recalculateGroupTotal(groupId);
                 this.showSuccess('Payment updated');
             },
             error: (err) => {
@@ -301,20 +316,30 @@ export class CompanyPaymentsComponent implements OnInit {
         });
     }
 
-    deletePayment(payment: any) {
+    deletePayment(payment: any, id) {
         this.deletingRowId = payment.id;
         this.deleting = true;
-        this.paymentService.deletePayment(payment).subscribe({
-            next: () => {
-                this.showSuccess('Payment deleted');
-                this.loadPayments(this.lastTableEvent);
+        this.confirmationService.confirm({
+            message: `Are you sure you want to delete payment for invoice ${payment.invoice_number}?`,
+            accept: () => {
+                this.paymentService.deletePayment(payment).subscribe({
+                    next: () => {
+                        this.showSuccess('Payment deleted');
+                        this.loadPayments(this.lastTableEvent);
+
+                    },
+                    error: () => this.showError('Failed to delete payment'),
+                    complete: () => {
+                        this.deleting = false;
+                        this.deletingRowId = null;
+                    }
+                });
             },
-            error: () => this.showError('Failed to delete payment'),
-            complete: () => {
+            reject: () => {
                 this.deleting = false;
                 this.deletingRowId = null;
             }
-        });
+        })
     }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -425,12 +450,21 @@ export class CompanyPaymentsComponent implements OnInit {
             return;
         }
 
+        if (!this.chequeNumber) {
+            this.showError('Cheque number is required');
+            return;
+        }
+        if (this.paymentDate == null || this.paymentDate === '') {
+            this.showError('Payment date is required');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('company_id', this.formGroup.value.selectedCompanyId.toString());
         formData.append('payment_date', this.paymentDate.toISOString());
         formData.append('payment_method_id', this.selectedPaymentMethod?.id || '');
         formData.append('remarks', this.remarks || '');
-        formData.append('reference_no', this.referenceNumber || '');
+        formData.append('cheque_number', this.chequeNumber || '');
 
         this.selectedInvoicesForPayment.forEach((inv, idx) => {
             formData.append(`payments[${idx}][invoice_id]`, inv.id);
@@ -449,7 +483,10 @@ export class CompanyPaymentsComponent implements OnInit {
                 this.onCardClose();
                 setTimeout(() => this.loadPayments(this.lastTableEvent), 500);
             },
-            error: (err) => this.showError(`Failed to save payments: ${err.error?.message || 'Unknown error'}`),
+            error: (err) => {
+                this.showError(`${err.error?.message || 'Unknown error'}`);
+                this.savingPayment = true;
+            },
             complete: () => {
                 this.savingPayment = false;
             }
@@ -489,4 +526,45 @@ export class CompanyPaymentsComponent implements OnInit {
     }
 
     protected readonly CompanyPayments = CompanyPayments;
+
+    private getGroupedPayments(payments: any[]) {
+        this.groupedPayments = [];
+
+        from(payments)
+            .pipe(
+                groupBy((p) => p.cheque_number),
+                mergeMap((group$) => group$.pipe(reduce((acc, cur) => [...acc, cur], [])))
+            )
+            .subscribe((group) =>
+                this.groupedPayments.push({
+                    id: group[0].cheque_number,
+                    cheque_number: group[0].cheque_number,
+                    payment_method: group[0].payment_method,
+                    payment_date: group[0].payment_date,
+                    amount_received: group.reduce((sum, p) => sum + parseFloat(p.amount_received), 0),
+                    payments: group
+                })
+            );
+
+        console.log(this.groupedPayments);
+    }
+
+    private recalculateGroupTotal(groupId) {
+        let groupPayments = this.payments.filter((p) => p.cheque_number === groupId);
+        let totalAmount = groupPayments.reduce((sum, p) => sum + parseFloat(p.amount_received), 0);
+        let group = this.groupedPayments.find((g) => g.id === groupId);
+        if (group) {
+            group.amount_received = totalAmount;
+            group.payments = groupPayments;
+        } else {
+            this.groupedPayments.push({
+                id: groupId,
+                cheque_number: groupId,
+                payment_method: groupPayments[0]?.payment_method || '',
+                payment_date: groupPayments[0]?.payment_date || '',
+                amount_received: totalAmount,
+                payments: groupPayments
+            });
+        }
+    }
 }

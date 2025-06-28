@@ -402,6 +402,7 @@ export class AddEditInvoiceComponent implements OnInit {
 
             accept: () => {
                 (this.invoiceForm.get('groups') as any).removeAt(groupIndex);
+                this.calculateTotal();
 
             },
             reject: () => {}
