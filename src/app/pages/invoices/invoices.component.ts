@@ -58,6 +58,7 @@ export class InvoicesComponent {
         totalRecords: 0,
         globalFilter: ''
     }
+    private lastTableEvent: any = this.state;
 
     invoices = signal<Invoice[]>([]);
     selectedInvoices: Invoice[] = [];
@@ -83,9 +84,11 @@ export class InvoicesComponent {
         const page = event.first / event.rows + 1;
         const perPage = event.rows;
 
+
         let params = {
             page,
-            per_page: perPage
+            per_page: perPage,
+            globalFilter: event.globalFilter || '',
         }
         this.invoiceService.getInvoiceData(params).subscribe({
             next: (res) => {
