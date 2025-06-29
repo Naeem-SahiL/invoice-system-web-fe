@@ -304,7 +304,7 @@ export class AddEditInvoiceComponent implements OnInit {
             }))
         };
 
-        console.log(payload);
+        // console.log(payload);
 
         this.loading = true;
 
@@ -316,9 +316,9 @@ export class AddEditInvoiceComponent implements OnInit {
                     this.router.navigate(['/pages/invoices']);
                 },
                 error: (err) => {
-                    console.log(err);
                     this.loading = false;
                     this.globalMsgService.showMessage({ severity: 'error', summary: 'Error', detail: err.error.message });
+                    this.router.navigate(['/pages/invoices']);
                 }
             });
         } else {

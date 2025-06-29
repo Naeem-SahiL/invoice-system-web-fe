@@ -12,7 +12,6 @@ export class GlobalMessageService {
 
 
   showMessage(message: ToastMessageOptions) {
-    console.log('GlobalMessageService: showMessage called with:', message);
     this.messageSubject.next(message);
   }
 }
