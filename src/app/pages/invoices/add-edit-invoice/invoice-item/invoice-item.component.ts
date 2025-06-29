@@ -141,9 +141,7 @@ export class InvoiceItemComponent implements OnInit {
      const index = itemArray.findIndex((i) => i.temp_id === item.temp_id);
      if (index > -1) {
          itemArray.splice(index, 1);
-         this.group.get('items').setValue(itemArray);
          this.calculateTotal.emit(true);
-
      }
  }
 
