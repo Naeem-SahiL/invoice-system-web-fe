@@ -13,10 +13,11 @@ import { CompaniesService, Company } from '../service/companies.service';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
+import { DatePicker } from 'primeng/datepicker';
 
 @Component({
     selector: 'app-outstanding-invoices',
-    imports: [Button, Card, DatePipe, DecimalPipe, PrimeTemplate, TableModule, AutoComplete, ReactiveFormsModule, Toolbar, NgIf, IconField, InputIcon, InputText],
+    imports: [Button, Card, DatePipe, DecimalPipe, PrimeTemplate, TableModule, AutoComplete, ReactiveFormsModule, Toolbar, NgIf, IconField, InputIcon, InputText, DatePicker],
     templateUrl: './outstanding-invoices.component.html',
     styleUrl: './outstanding-invoices.component.scss',
     providers: [PaymentsService, CompaniesService]
@@ -110,7 +111,9 @@ export class OutstandingInvoicesComponent {
         let params = {
             globalFilter: this.lastTableEvent.globalFilter || '',
             paginator: false,
-            company_id: formValue.selectedCompanyId.toString()
+            company_id: formValue.selectedCompanyId.toString(),
+            from_date: formValue.fromDate ? formatDate(formValue.fromDate, 'yyyy-MM-dd', 'en-US') : '',
+            to_date: formValue.toDate ? formatDate(formValue.toDate, 'yyyy-MM-dd', 'en-US') : ''
         };
 
         this.paymentService.getOutstandingInvoices(params).subscribe({
@@ -145,7 +148,9 @@ export class OutstandingInvoicesComponent {
         }
 
         let params = {
-            company_id: formValue.selectedCompanyId.toString()
+            company_id: formValue.selectedCompanyId.toString(),
+            from_date: formValue.fromDate ? formatDate(formValue.fromDate, 'yyyy-MM-dd', 'en-US') : '',
+            to_date: formValue.toDate ? formatDate(formValue.toDate, 'yyyy-MM-dd', 'en-US') : ''
         };
 
         this.downloadingOutstanding = true;

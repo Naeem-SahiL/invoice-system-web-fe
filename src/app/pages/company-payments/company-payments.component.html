@@ -129,7 +129,7 @@
                             <td>{{ inv.outstanding_balance }}</td>
                             <td>
                                 <p-inputNumber [(ngModel)]="inv.amount_received" mode="decimal"
-                                               [minFractionDigits]="3"/>
+                                               [minFractionDigits]="3" (onInput)="calculateTotalReceived()"/>
                             </td>
                             <td class="flex-1 flex justify-start">
                                 <p-button severity="danger" icon="pi pi-trash" (onClick)="removeSelectedInvoice(inv)"/>
@@ -149,12 +149,22 @@
             </div>
 
 
-            <!-- Reference No -->
+            <div class="flex justify-between">
+
+            <!-- Cheque No -->
             <p-floatlabel class="my-6">
                 <input pInputText id="reference_no" [(ngModel)]="chequeNumber" required="true"/>
                 <label for="reference_no">Cheque No</label>
             </p-floatlabel>
 
+            <!-- Cheque No -->
+            <p-floatlabel class="my-6">
+                <input pInputText id="total_amount" [(ngModel)]="total_amount_received" readonly required="true"/>
+
+                <label for="reference_no">Total Amount Received</label>
+            </p-floatlabel>
+
+            </div>
             <!-- Remarks -->
             <p-floatlabel>
                 <textarea pTextarea id="over_label" [(ngModel)]="remarks" rows="2" style="resize: none" class="h-full w-full"></textarea>
@@ -211,8 +221,12 @@
         <tr>
             <th style="width: 3rem"></th>
             <th>Cheque Number</th>
+            <th>Payment Method</th>
             <th>Payment Date</th>
             <th>Total Received</th>
+            <th>Remarks</th>
+            <th>Files</th>
+            <th>Action</th>
         </tr>
     </ng-template>
 
@@ -229,26 +243,46 @@
                           [plain]="true" />
             </td>
             <td>{{ group.cheque_number }}</td>
+            <td>{{ group.payment_method }}</td>
             <td>{{ group.payment_date }}</td>
-            <td>{{ group.amount_received | number:'1.3-3' }}</td>
+            <td>{{ group.total_amount_received | number:'1.3-3' }}</td>
+            <td>{{ group.remarks }}</td>
+            <td>
+                <ng-container *ngIf="group.files?.length > 0; else noFiles">
+                    <div class="flex flex-wrap gap-2">
+                        <a *ngFor="let file of group.files"
+                           [href]="file.url"
+                           target="_blank"
+                           class="text-primary underline text-sm"
+                           pTooltip="{{ file.url.split('/').pop() }}"
+                           tooltipPosition="top">
+                            {{ file.url.split('/').pop().substring(0, 20) + '...' }}
+                        </a>
+                    </div>
+                </ng-container>
+                <ng-template #noFiles>
+                    <span class="text-gray-400 text-sm">No files</span>
+                </ng-template>
+            </td>
+            <td>
+                <p-button [loading]="editingChequePayment" icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"
+                          (onClick)="editChequePayment(group)" *hasPermission="CompanyPayments.UPDATE"/>
+            </td>
         </tr>
     </ng-template>
 
     <!-- EXPANSION PANEL -->
     <ng-template pTemplate="expandedrow" let-group>
         <tr>
-            <td colspan="4">
+            <td colspan="8">
 
-        <p-card header="Grouped Payments" styleClass="mb-3">
+        <p-card header="Invoice Payments" styleClass="mb-3">
             <p-table [value]="group.payments" [responsiveLayout]="'scroll'" class="p-datatable-sm">
                 <ng-template pTemplate="header">
                     <tr>
                         <th>Invoice #</th>
-                        <th>Amount</th>
-                        <th>Method</th>
-                        <th>Remarks</th>
-                        <th>Files</th>
-                        <th class="text-center">Actions</th>
+                        <th>Amount Received</th>
+                        <th class="text-center" style="text-align: center">Actions</th>
                     </tr>
                 </ng-template>
 
@@ -266,25 +300,6 @@
                             </ng-container>
                             <ng-template #amountDisplay>
                                 {{ payment.amount_received | number:'1.3-3' }}
-                            </ng-template>
-                        </td>
-                        <td>{{ payment.payment_method }}</td>
-                        <td>{{ payment.remarks }}</td>
-                        <td>
-                            <ng-container *ngIf="payment.files?.length > 0; else noFiles">
-                                <div class="flex flex-wrap gap-2">
-                                    <a *ngFor="let file of payment.files"
-                                       [href]="file.url"
-                                       target="_blank"
-                                       class="text-primary underline text-sm"
-                                       pTooltip="{{ file.url.split('/').pop() }}"
-                                       tooltipPosition="top">
-                                        {{ file.url.split('/').pop() }}
-                                    </a>
-                                </div>
-                            </ng-container>
-                            <ng-template #noFiles>
-                                <span class="text-gray-400 text-sm">No files</span>
                             </ng-template>
                         </td>
                         <td class="flex gap-2 justify-center">
@@ -315,7 +330,7 @@
 
     <ng-template pTemplate="emptymessage">
         <tr>
-            <td colspan="5" class="p-4 !text-center">
+            <td colspan="8" class="p-4 !text-center">
                 {{ formGroup.controls.selectedCompanyId.value ? 'No payments found for the selected company. Try reload' : 'Please select company to show payments.' }}
             </td>
         </tr>

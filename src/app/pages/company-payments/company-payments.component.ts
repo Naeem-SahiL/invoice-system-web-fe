@@ -143,6 +143,7 @@ export class CompanyPaymentsComponent implements OnInit {
     };
     lastTableEvent = this.state;
     expandedRows = {};
+    editingChequePayment = false;
 
     companyOptions = [];
     selectedCompanyId: number;
@@ -169,6 +170,7 @@ export class CompanyPaymentsComponent implements OnInit {
     uploadedFiles: File[] = [];
     paymentDate: any = new Date();
     chequeNumber: string = '';
+    total_amount_received: number = 0.00;
 
     savingPayment = false;
     private editingRowOriginal: any;
@@ -268,9 +270,9 @@ export class CompanyPaymentsComponent implements OnInit {
 
         this.paymentService.getPayments(params).subscribe({
             next: (payments) => {
-                this.payments = payments.data;
+                this.groupedPayments = payments.data;
                 this.state.totalRecords = payments.meta?.total;
-                this.getGroupedPayments(this.payments);
+                // this.getGroupedPayments(this.payments);
             },
             error: () => {
                 this.showError('Failed to load payments');
@@ -326,9 +328,12 @@ export class CompanyPaymentsComponent implements OnInit {
                     next: () => {
                         this.showSuccess('Payment deleted');
                         this.loadPayments(this.lastTableEvent);
-
                     },
-                    error: () => this.showError('Failed to delete payment'),
+                    error: () => {
+                        this.showError('Failed to delete payment');
+                        this.deleting = false;
+                        this.deletingRowId = null;
+                    },
                     complete: () => {
                         this.deleting = false;
                         this.deletingRowId = null;
@@ -407,6 +412,7 @@ export class CompanyPaymentsComponent implements OnInit {
             message: `Are you sure you want to remove invoice ${inv.invoice_number}?`,
             accept: () => {
                 this.selectedInvoicesForPayment = this.selectedInvoicesForPayment.filter((i) => i.id !== inv.id);
+                this.calculateTotalReceived();
                 this.showSuccess(`Removed invoice ${inv.invoice_number}`);
             },
             reject: () => {
@@ -431,6 +437,15 @@ export class CompanyPaymentsComponent implements OnInit {
                 this.selectedInvoicesForPayment.push(incomingInv);
             }
         });
+
+        this.calculateTotalReceived();
+    }
+
+    calculateTotalReceived(){
+        this.total_amount_received = 0.00;
+        this.selectedInvoicesForPayment.forEach((inv)=>{
+           this.total_amount_received += inv.amount_received;
+        });
     }
 
     closeAddInvoiceDialog() {
@@ -444,6 +459,28 @@ export class CompanyPaymentsComponent implements OnInit {
         });
     }
 
+    editChequePayment(group){
+        this.editingChequePayment = true;
+        this.paymentService.getPayment(group.id).subscribe({
+            next: (res:any)=>{
+                this.showAddPaymentCard = true;
+                this.selectedInvoicesForPayment = res.payments;
+                this.remarks = res.remarks;
+                this.chequeNumber = res.cheque_number;
+                this.paymentDate = new Date(res.payment_date);
+                this.selectedPaymentMethod = res.payment_method;
+
+                this.editingChequePayment = false;
+            },
+            error: (err)=>{
+                this.editingChequePayment = false;
+                this.showError('Failed to load payment details');
+            }
+        })
+
+        // console.log(group);
+
+    }
     savePayments() {
         if (!this.formGroup.value.selectedCompanyId) {
             this.showError('Company is required');
@@ -465,6 +502,7 @@ export class CompanyPaymentsComponent implements OnInit {
         formData.append('payment_method_id', this.selectedPaymentMethod?.id || '');
         formData.append('remarks', this.remarks || '');
         formData.append('cheque_number', this.chequeNumber || '');
+        formData.append('total_amount', `${this.total_amount_received}` );
 
         this.selectedInvoicesForPayment.forEach((inv, idx) => {
             formData.append(`payments[${idx}][invoice_id]`, inv.id);
@@ -480,17 +518,26 @@ export class CompanyPaymentsComponent implements OnInit {
             next: () => {
                 this.showSuccess('Payments saved successfully');
                 // reset payment details
+                this.cleanAddPayemntData();
                 this.onCardClose();
                 setTimeout(() => this.loadPayments(this.lastTableEvent), 500);
             },
             error: (err) => {
                 this.showError(`${err.error?.message || 'Unknown error'}`);
-                this.savingPayment = true;
+                this.savingPayment = false;
             },
             complete: () => {
                 this.savingPayment = false;
             }
         });
+    }
+
+    private cleanAddPayemntData(){
+        this.total_amount_received = 0;
+        this.remarks = '';
+        this.chequeNumber = '';
+        this.selectedInvoicesForPayment = [];
+        this.uploadedFiles = [];
     }
 
     private showError(detail: string) {
@@ -550,21 +597,12 @@ export class CompanyPaymentsComponent implements OnInit {
     }
 
     private recalculateGroupTotal(groupId) {
-        let groupPayments = this.payments.filter((p) => p.cheque_number === groupId);
-        let totalAmount = groupPayments.reduce((sum, p) => sum + parseFloat(p.amount_received), 0);
+        // let groupPayments = this.payments.filter((p) => p.cheque_number === groupId);
         let group = this.groupedPayments.find((g) => g.id === groupId);
+        let totalAmount = group.payments.reduce((sum, p) => sum + parseFloat(p.amount_received), 0);
         if (group) {
-            group.amount_received = totalAmount;
-            group.payments = groupPayments;
-        } else {
-            this.groupedPayments.push({
-                id: groupId,
-                cheque_number: groupId,
-                payment_method: groupPayments[0]?.payment_method || '',
-                payment_date: groupPayments[0]?.payment_date || '',
-                amount_received: totalAmount,
-                payments: groupPayments
-            });
+            group.total_amount_received = totalAmount;
+            // group.payments = groupPayments;
         }
     }
 }

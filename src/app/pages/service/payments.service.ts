@@ -72,4 +72,8 @@ export class PaymentsService {
     submitMultiplePayments(formData: FormData) {
         return this.http.post(this.baseUrl + '/invoice-payments/multiple', formData);
     }
+
+    getPayment(id) {
+        return this.http.get(this.baseUrl + '/invoice-payments/' + id);
+    }
 }
