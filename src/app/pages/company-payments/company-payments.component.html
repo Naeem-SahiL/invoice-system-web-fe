@@ -153,7 +153,7 @@
 
             <!-- Cheque No -->
             <p-floatlabel class="my-6">
-                <input pInputText id="reference_no" [(ngModel)]="chequeNumber" required="true"/>
+                <input pInputText id="reference_no" [(ngModel)]="chequeNumber" [readonly]="editingChequePaymentId !== null" required="true"/>
                 <label for="reference_no">Cheque No</label>
             </p-floatlabel>
 
@@ -175,6 +175,31 @@
             <!-- File Upload -->
             <div class="my-6">
                 <label>Files</label>
+
+                <!-- Existing Files Section -->
+                <div *ngIf="existingFiles.length > 0" class="mb-4">
+                    <h6 class="text-sm font-medium mb-2">Existing Files:</h6>
+                    <div class="flex flex-wrap gap-2">
+                        <div *ngFor="let file of existingFiles" class="flex items-center gap-2 bg-gray-100 p-2 rounded">
+                            <a [href]="file.url" target="_blank" class="text-primary underline text-sm">
+                                {{ file.url.split('/').pop() }}
+                            </a>
+                            <p-button
+                                icon="pi pi-times"
+                                severity="danger"
+                                size="small"
+                                [text]="true"
+                                (onClick)="removeExistingFile(file)"
+                                pTooltip="Delete file">
+                            </p-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New File Upload -->
+                <div>
+                    <h6 class="text-sm font-medium mb-2" *ngIf="existingFiles.length > 0">Add New Files:</h6>
+                </div>
             </div>
             <p-fileupload name="demo"
                           [multiple]="true"

@@ -73,6 +73,15 @@ export class PaymentsService {
         return this.http.post(this.baseUrl + '/invoice-payments/multiple', formData);
     }
 
+    updateChequePayment(id: number, formData: FormData) {
+        console.log('=== PAYMENT SERVICE UPDATE ===', {
+            id,
+            url: this.baseUrl + '/invoice-payments/multiple/' + id,
+            formData: formData
+        });
+        return this.http.post(this.baseUrl + '/invoice-payments/multiple/' + id, formData);
+    }
+
     getPayment(id) {
         return this.http.get(this.baseUrl + '/invoice-payments/' + id);
     }

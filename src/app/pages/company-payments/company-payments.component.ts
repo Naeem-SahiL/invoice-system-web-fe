@@ -144,6 +144,7 @@ export class CompanyPaymentsComponent implements OnInit {
     lastTableEvent = this.state;
     expandedRows = {};
     editingChequePayment = false;
+    editingChequePaymentId: number | null = null;
 
     companyOptions = [];
     selectedCompanyId: number;
@@ -168,6 +169,7 @@ export class CompanyPaymentsComponent implements OnInit {
     selectedInvoicesForPayment: any[] = [];
     remarks: string = '';
     uploadedFiles: File[] = [];
+    existingFiles: any[] = []; // For files that already exist on the server
     paymentDate: any = new Date();
     chequeNumber: string = '';
     total_amount_received: number = 0.00;
@@ -432,7 +434,14 @@ export class CompanyPaymentsComponent implements OnInit {
         incomingInvoices.forEach((incomingInv) => {
             const existingInv = this.selectedInvoicesForPayment.find((inv) => inv.id === incomingInv.id);
             if (existingInv) {
-                existingInv.amount_received += incomingInv.outstanding_balance;
+                // When editing a cheque payment, add the new amount to existing
+                if (this.editingChequePaymentId !== null) {
+                    // Add the new amount to the existing amount
+                    existingInv.amount_received = (parseFloat(existingInv.amount_received) || 0) + (parseFloat(incomingInv.amount_received) || 0);
+                } else {
+                    // For new payments, just update the outstanding balance info
+                    existingInv.outstanding_balance = incomingInv.outstanding_balance;
+                }
             } else {
                 this.selectedInvoicesForPayment.push(incomingInv);
             }
@@ -444,7 +453,7 @@ export class CompanyPaymentsComponent implements OnInit {
     calculateTotalReceived(){
         this.total_amount_received = 0.00;
         this.selectedInvoicesForPayment.forEach((inv)=>{
-           this.total_amount_received += inv.amount_received;
+           this.total_amount_received += parseFloat(inv.amount_received) || 0;
         });
     }
 
@@ -461,6 +470,7 @@ export class CompanyPaymentsComponent implements OnInit {
 
     editChequePayment(group){
         this.editingChequePayment = true;
+        this.editingChequePaymentId = group.id; // Store the cheque payment ID
         this.paymentService.getPayment(group.id).subscribe({
             next: (res:any)=>{
                 this.showAddPaymentCard = true;
@@ -468,7 +478,25 @@ export class CompanyPaymentsComponent implements OnInit {
                 this.remarks = res.remarks;
                 this.chequeNumber = res.cheque_number;
                 this.paymentDate = new Date(res.payment_date);
-                this.selectedPaymentMethod = res.payment_method;
+
+                // Find the payment method object from the dropdown options
+                this.selectedPaymentMethod = this.paymentMethods.find(method =>
+                    method.visible_value === res.payment_method ||
+                    method.id === res.payment_method_id
+                ) || null;
+
+                // Set the selected company
+                this.formGroup.patchValue({
+                    selectedCompanyId: res.company_id
+                });
+
+                // Load existing files
+                this.existingFiles = res.files || [];
+                console.log('Loaded existing files:', this.existingFiles);
+                this.uploadedFiles = []; // Reset new uploaded files
+
+                // Calculate total amount from selected invoices
+                this.calculateTotalReceived();
 
                 this.editingChequePayment = false;
             },
@@ -504,29 +532,66 @@ export class CompanyPaymentsComponent implements OnInit {
         formData.append('cheque_number', this.chequeNumber || '');
         formData.append('total_amount', `${this.total_amount_received}` );
 
-        this.selectedInvoicesForPayment.forEach((inv, idx) => {
-            formData.append(`payments[${idx}][invoice_id]`, inv.id);
-            formData.append(`payments[${idx}][amount_received]`, inv.amount_received);
+        // Group payments by invoice_id to avoid duplicates
+        const groupedPayments = this.groupPaymentsByInvoice(this.selectedInvoicesForPayment);
+
+        groupedPayments.forEach((payment, idx) => {
+            formData.append(`payments[${idx}][invoice_id]`, payment.invoice_id);
+            formData.append(`payments[${idx}][amount_received]`, payment.amount_received.toString());
         });
 
         (this.uploadedFiles || []).forEach((file) => {
             formData.append('files[]', file, file.name);
-        });
+        });        // Send existing files IDs to keep (for file deletion logic)
+        console.log('Existing files before sending:', this.existingFiles);
+
+        if (this.existingFiles && this.existingFiles.length > 0) {
+            this.existingFiles.forEach((file, idx) => {
+                console.log(`Adding existing file ${idx}:`, file.id);
+                formData.append(`existing_files[${idx}]`, file.id.toString());
+            });
+        } else {
+            console.log('No existing files to send');
+            // Don't send anything if no files exist - let backend handle it
+        }
+
+        // Log what we're sending
+        console.log('FormData contents:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
 
         this.savingPayment = true;
-        this.paymentService.submitMultiplePayments(formData).subscribe({
-            next: () => {
-                this.showSuccess('Payments saved successfully');
+
+        // Determine if we're creating or updating
+        const isUpdating = this.editingChequePaymentId !== null;
+
+        console.log('=== ABOUT TO MAKE REQUEST ===', {
+            isUpdating,
+            editingId: this.editingChequePaymentId,
+            hasFormData: !!formData
+        });
+
+        const paymentObservable = isUpdating
+            ? this.paymentService.updateChequePayment(this.editingChequePaymentId, formData)
+            : this.paymentService.submitMultiplePayments(formData);
+
+        paymentObservable.subscribe({
+            next: (response) => {
+                console.log('=== PAYMENT UPDATE RESPONSE ===', response);
+                this.showSuccess(isUpdating ? 'Payment updated successfully' : 'Payments saved successfully');
                 // reset payment details
                 this.cleanAddPayemntData();
                 this.onCardClose();
                 setTimeout(() => this.loadPayments(this.lastTableEvent), 500);
             },
             error: (err) => {
+                console.error('=== PAYMENT UPDATE ERROR ===', err);
                 this.showError(`${err.error?.message || 'Unknown error'}`);
                 this.savingPayment = false;
             },
             complete: () => {
+                console.log('=== PAYMENT UPDATE COMPLETE ===');
                 this.savingPayment = false;
             }
         });
@@ -538,6 +603,8 @@ export class CompanyPaymentsComponent implements OnInit {
         this.chequeNumber = '';
         this.selectedInvoicesForPayment = [];
         this.uploadedFiles = [];
+        this.existingFiles = [];
+        this.editingChequePaymentId = null; // Reset editing ID
     }
 
     private showError(detail: string) {
@@ -569,7 +636,9 @@ export class CompanyPaymentsComponent implements OnInit {
         this.selectedInvoicesForPayment = [];
         this.remarks = '';
         this.uploadedFiles = [];
+        this.existingFiles = [];
         this.selectedInvoices = [];
+        this.editingChequePaymentId = null; // Reset editing ID
     }
 
     protected readonly CompanyPayments = CompanyPayments;
@@ -604,5 +673,48 @@ export class CompanyPaymentsComponent implements OnInit {
             group.total_amount_received = totalAmount;
             // group.payments = groupPayments;
         }
+    }
+
+    /**
+     * Group payments by invoice_id and merge amounts to avoid duplicate payment records
+     */
+    private groupPaymentsByInvoice(payments: any[]): any[] {
+        const grouped = new Map<string, any>();
+
+        payments.forEach(payment => {
+            const invoiceId = payment.invoice_id || payment.id;
+            const amount = parseFloat(payment.amount_received) || 0;
+
+            if (grouped.has(invoiceId)) {
+                // Merge amounts for the same invoice
+                const existing = grouped.get(invoiceId);
+                existing.amount_received = (parseFloat(existing.amount_received) || 0) + amount;
+            } else {
+                // Create new grouped payment
+                grouped.set(invoiceId, {
+                    invoice_id: invoiceId,
+                    amount_received: amount,
+                    invoice_number: payment.invoice_number,
+                    outstanding_balance: payment.outstanding_balance,
+                    // Keep other properties from the first occurrence
+                    ...payment
+                });
+            }
+        });
+
+        return Array.from(grouped.values());
+    }
+
+    removeExistingFile(file: any) {
+        console.log('Removing file:', file);
+        this.confirmationService.confirm({
+            message: `Are you sure you want to delete this file?`,
+            accept: () => {
+                console.log('Before removal, existingFiles:', this.existingFiles);
+                this.existingFiles = this.existingFiles.filter(f => f.id !== file.id);
+                console.log('After removal, existingFiles:', this.existingFiles);
+                this.showSuccess('File removed from list (will be deleted on save)');
+            }
+        });
     }
 }
