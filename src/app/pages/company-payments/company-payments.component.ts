@@ -50,8 +50,6 @@ import { CompanyPayments } from '../../shared/Permissions';
         Button,
         Card,
         DropdownModule,
-        IconField,
-        InputIcon,
         InputNumber,
         InputText,
         Ripple,
