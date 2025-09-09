@@ -22,6 +22,7 @@ import { InvoiceItemComponent } from './invoice-item/invoice-item.component';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import {GlobalMessageService} from "../../service/global-message.service";
 import {ConfirmDialog} from "primeng/confirmdialog";
+import dayjs from 'dayjs';
 
 @Component({
     selector: 'app-add-edit-invoice',
@@ -285,12 +286,14 @@ export class AddEditInvoiceComponent implements OnInit {
 
         this.validateGroups();
         let formValue = this.invoiceForm.value;
+        let pickedDate = formValue.invoice_date;
 
+        let beDate = dayjs(pickedDate).format('YYYY-MM-DD');
         const payload: Invoice = {
             id: formValue.id,
             invoice_number: formValue.invoice_number,
             company_id: formValue.company_id,
-            invoice_date: formValue.invoice_date,
+            invoice_date: beDate,
             gross_amount: formValue.gross_amount,
             vat_amount: formValue.vat_amount,
             total_amount: formValue.total_amount,

@@ -33,6 +33,7 @@ import { IftaLabel } from 'primeng/iftalabel';
 import { Select } from 'primeng/select';
 import { HasPermissionDirective } from '../../shared/has.permission.directive';
 import { CompanyPayments } from '../../shared/Permissions';
+import dayjs from 'dayjs';
 
 @Component({
     selector: 'app-company-payments',
@@ -522,9 +523,11 @@ export class CompanyPaymentsComponent implements OnInit {
             return;
         }
 
+        let beDate = dayjs(this.paymentDate).format('YYYY-MM-DD');
+
         const formData = new FormData();
         formData.append('company_id', this.formGroup.value.selectedCompanyId.toString());
-        formData.append('payment_date', this.paymentDate.toISOString());
+        formData.append('payment_date', beDate);
         formData.append('payment_method_id', this.selectedPaymentMethod?.id || '');
         formData.append('remarks', this.remarks || '');
         formData.append('cheque_number', this.chequeNumber || '');
