@@ -67,7 +67,7 @@
 
                 </div>
 
-                <app-invoice-item [group]="group" (calculateTotal)="calculateTotal()"></app-invoice-item>
+                <app-invoice-item [group]="group" [invoiceId]="invoiceId ? +invoiceId : null" (calculateTotal)="calculateTotal()"></app-invoice-item>
 
 
             </div>

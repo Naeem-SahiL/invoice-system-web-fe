@@ -46,6 +46,28 @@
 
 
     </div>
+
+    <!-- Duplicate Detection Error Strip -->
+    <div *ngIf="checkingDuplicates || duplicateErrors.length > 0" class="mb-4">
+        <!-- Loading indicator -->
+        <div *ngIf="checkingDuplicates" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+            <div class="flex items-center">
+                <i class="pi pi-spin pi-spinner mr-2"></i>
+                <span>Checking for duplicates...</span>
+            </div>
+        </div>
+
+        <!-- Error messages -->
+        <div *ngIf="!checkingDuplicates && duplicateErrors.length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div class="flex items-center">
+                <i class="pi pi-exclamation-triangle mr-2"></i>
+                <span class="font-semibold">Duplicate Records Found:</span>
+            </div>
+            <ul class="mt-2 list-disc list-inside">
+                <li *ngFor="let error of duplicateErrors" class="text-sm">{{ error }}</li>
+            </ul>
+        </div>
+    </div>
 </form>
 
 

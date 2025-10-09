@@ -84,4 +84,8 @@ export class InvoiceService {
     deleteSelectedInvoices(payload: {ids: any[]}): Observable<void> {
         return this.http.delete<void>( `${this.apiUrl}/deleteByIds`, { body: payload });
     }
+
+    detectDuplicates(data: {customerInvoiceNo?: string, blNo?: string, declarationNo?: string, excludeInvoiceId?: number}): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/detectDuplicates`, data);
+    }
 }

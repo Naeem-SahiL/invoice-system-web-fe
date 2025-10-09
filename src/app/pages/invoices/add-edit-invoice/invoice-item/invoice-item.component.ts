@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, output } from '@angular/core';
-import { InvoiceGroup, InvoiceItem } from '../../../service/invoice.service';
+import { InvoiceGroup, InvoiceItem, InvoiceService } from '../../../service/invoice.service';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -8,25 +8,30 @@ import { AddEditInvoiceItemComponent } from '../add-edit-invoice-item/add-edit-i
 import { Toast } from 'primeng/toast';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { NgIf } from '@angular/common';
+import { NgIf, NgFor } from '@angular/common';
 import { Message } from 'primeng/message';
 import { group } from '@angular/animations';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { Observable } from 'rxjs';
+import { Observable, debounceTime, distinctUntilChanged } from 'rxjs';
 import { GlobalMessageService } from '../../../service/global-message.service';
 
 @Component({
     selector: 'app-invoice-item',
-    imports: [Button, TableModule, AddEditInvoiceItemComponent, Toast, FormsModule, InputText, ReactiveFormsModule, Select, NgIf, Message],
+    imports: [Button, TableModule, AddEditInvoiceItemComponent, Toast, FormsModule, InputText, ReactiveFormsModule, Select, NgIf, NgFor, Message],
     templateUrl: './invoice-item.component.html',
     styleUrl: './invoice-item.component.scss'
 })
 export class InvoiceItemComponent implements OnInit {
     @Output() calculateTotal = new EventEmitter<boolean>();
+    @Input() invoiceId: number | null = null; // Add input for invoice ID
+
+    duplicateErrors: string[] = [];
+    checkingDuplicates = false;
 
     constructor(private confirmationService: ConfirmationService,
-                private globalMessageService: GlobalMessageService) {}
+                private globalMessageService: GlobalMessageService,
+                private invoiceService: InvoiceService) {}
 
     inputTypes = [
         { label: 'Invoice No', value: 'invoiceNo' },
@@ -54,6 +59,75 @@ export class InvoiceItemComponent implements OnInit {
                 this.inputTypeChange(this.inputTypes[0]); // Default to Invoice No
             }
         }
+
+        // Set up duplicate detection on field changes
+        this.setupDuplicateDetection();
+    }
+
+    setupDuplicateDetection() {
+        // Listen to changes in the duplicate detection fields
+        const customerInvoiceNoControl = this.group.get('customerInvoiceNo');
+        const blNoControl = this.group.get('blNo');
+        const declarationNoControl = this.group.get('declarationNo');
+
+        if (customerInvoiceNoControl) {
+            customerInvoiceNoControl.valueChanges.pipe(
+                debounceTime(500),
+                distinctUntilChanged()
+            ).subscribe(() => this.checkForDuplicates());
+        }
+
+        if (blNoControl) {
+            blNoControl.valueChanges.pipe(
+                debounceTime(500),
+                distinctUntilChanged()
+            ).subscribe(() => this.checkForDuplicates());
+        }
+
+        if (declarationNoControl) {
+            declarationNoControl.valueChanges.pipe(
+                debounceTime(500),
+                distinctUntilChanged()
+            ).subscribe(() => this.checkForDuplicates());
+        }
+    }
+
+    checkForDuplicates() {
+        const customerInvoiceNo = this.group.get('customerInvoiceNo')?.value;
+        const blNo = this.group.get('blNo')?.value;
+        const declarationNo = this.group.get('declarationNo')?.value;
+
+        // Only check if at least one field has a value
+        if (!customerInvoiceNo && !blNo && !declarationNo) {
+            this.duplicateErrors = [];
+            this.checkingDuplicates = false;
+            return;
+        }
+
+        this.checkingDuplicates = true;
+        const duplicateData = {
+            customerInvoiceNo: customerInvoiceNo || null,
+            blNo: blNo || null,
+            declarationNo: declarationNo || null,
+            // Use invoice ID instead of group ID for exclusion
+            excludeInvoiceId: this.invoiceId || null
+        };
+
+        this.invoiceService.detectDuplicates(duplicateData).subscribe({
+            next: (response) => {
+                // If response is successful, no duplicates found
+                this.duplicateErrors = [];
+                this.checkingDuplicates = false;
+            },
+            error: (error) => {
+                this.checkingDuplicates = false;
+                if (error.status === 422 && error.error?.messages) {
+                    this.duplicateErrors = error.error.messages;
+                } else {
+                    this.duplicateErrors = [];
+                }
+            }
+        });
     }
 
     inputTypeChange(value: any) {
